@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('검색 결과')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">
+            검색: "<span th:text="${keyword}"></span>"
+            <span class="badge ms-2"
+                  th:classappend="${secure} ? 'bg-dark' : 'bg-secondary'"
+                  th:text="${secure} ? '안전 검색' : '취약 검색'"></span>
+        </h4>
+        <a th:href="@{/bbs}" class="btn btn-sm btn-outline-secondary">목록으로</a>
+    </div>
+
+    <!-- 실행된 SQL -->
+    <div th:if="${searchResult != null}" class="mb-4">
+        <small class="text-muted fw-bold">실행된 SQL</small>
+        <div class="code-block" th:text="${searchResult.sqlExecuted}"></div>
+        <div th:if="${searchResult.error}" class="result-box result-box--error mt-2"
+             th:text="${searchResult.error}"></div>
+    </div>
+
+    <!-- 결과 테이블 -->
+    <div th:if="${searchResult != null and searchResult.rows != null}">
+        <div class="mb-2 small text-muted">
+            <span th:text="${searchResult.count}">0</span>개 결과
+            <span th:if="${!secure}" class="ms-2 fw-bold">
+                ⚠ UNION 공격으로 user_tb 데이터가 노출될 수 있습니다.
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead class="table-dark">
+                    <tr th:if="${!#lists.isEmpty(searchResult.rows)}">
+                        <th th:each="key : ${searchResult.rows[0].keySet()}"
+                            th:text="${key}"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="row : ${searchResult.rows}">
+                        <td th:each="entry : ${row}" th:text="${entry.value}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:if="${searchResult == null or searchResult.rows == null or #lists.isEmpty(searchResult.rows)}"
+         class="text-muted">검색 결과가 없습니다.</div>
+
+    <!-- 재검색 -->
+    <div class="card border mt-4">
+        <div class="card-body">
+            <form th:action="@{/bbs/search}" method="get" class="row g-2">
+                <div class="col">
+                    <input type="text" class="form-control" name="keyword"
+                           th:value="${keyword}" placeholder="검색어">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-dark">취약 검색</button>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" name="secure" value="true"
+                            class="btn btn-outline-dark">안전 검색</button>
+                </div>
+            </form>
+            <div class="attack-hint mt-2">
+                <strong>공격 예시</strong>
+                <ul>
+                    <li>전체 조회: <code>%' OR '1'='1</code></li>
+                    <li>계정 탈취: <code>%' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb -- </code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

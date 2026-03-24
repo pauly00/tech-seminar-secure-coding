@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('취약점 데모')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="mb-4">
+        <h2 class="fw-bold">웹 보안 취약점 데모</h2>
+        <p class="text-muted">각 취약점을 직접 실습하고, 안전한 코드와 취약한 코드를 나란히 비교해보세요.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- SQL Injection -->
+        <div class="col-md-6">
+            <a th:href="@{/demo/sql-injection}" class="vuln-card vuln-card--sql h-100">
+                <div class="vuln-icon">SQL</div>
+                <h4 class="fw-bold">SQL Injection</h4>
+                <p class="text-muted mb-2">
+                    사용자 입력값이 SQL 쿼리에 직접 삽입될 때 발생하는 취약점.
+                </p>
+                <ul class="small text-muted">
+                    <li>로그인 우회: <code>admin' --</code></li>
+                    <li>UNION 공격으로 계정 정보 탈취</li>
+                    <li>방어: PreparedStatement / 파라미터 바인딩</li>
+                </ul>
+                <span class="badge bg-dark">OWASP A03: Injection</span>
+            </a>
+        </div>
+
+        <!-- XSS -->
+        <div class="col-md-6">
+            <a th:href="@{/demo/xss}" class="vuln-card vuln-card--xss h-100">
+                <div class="vuln-icon">XSS</div>
+                <h4 class="fw-bold">XSS (Cross-Site Scripting)</h4>
+                <p class="text-muted mb-2">
+                    악성 스크립트가 웹 페이지에 삽입되어 다른 사용자의 브라우저에서 실행되는 취약점.
+                </p>
+                <ul class="small text-muted">
+                    <li>Reflected XSS: 입력값 즉시 출력</li>
+                    <li>Stored XSS: DB 저장 후 모든 사용자에게 실행</li>
+                    <li>방어: HTML 인코딩 (th:text)</li>
+                </ul>
+                <span class="badge bg-secondary">OWASP A03: Injection</span>
+            </a>
+        </div>
+
+        <!-- 파일 업로드 -->
+        <div class="col-md-6">
+            <a th:href="@{/demo/file-upload}" class="vuln-card vuln-card--upload h-100">
+                <div class="vuln-icon">FILE</div>
+                <h4 class="fw-bold">파일 업로드 취약점</h4>
+                <p class="text-muted mb-2">
+                    확장자/내용 검증 없이 파일 업로드 허용 시 웹쉘 등 실행 파일 업로드 가능.
+                </p>
+                <ul class="small text-muted">
+                    <li>webshell.jsp 업로드 → 원격 명령 실행</li>
+                    <li>이중 확장자 우회: image.jpg.jsp</li>
+                    <li>방어: 화이트리스트 + 랜덤 파일명</li>
+                </ul>
+                <span class="badge bg-secondary">OWASP A04: Insecure Design</span>
+            </a>
+        </div>
+
+        <!-- 경로 순회 -->
+        <div class="col-md-6">
+            <a th:href="@{/demo/path-traversal}" class="vuln-card vuln-card--path h-100">
+                <div class="vuln-icon">PATH</div>
+                <h4 class="fw-bold">경로 순회 (Path Traversal)</h4>
+                <p class="text-muted mb-2">
+                    ../를 이용해 허용된 디렉토리 밖의 파일에 접근하는 취약점.
+                </p>
+                <ul class="small text-muted">
+                    <li>../../application.properties (DB 비밀번호 노출)</li>
+                    <li>../../../etc/passwd (Linux)</li>
+                    <li>방어: normalize() + startsWith() 검사</li>
+                </ul>
+                <span class="badge bg-secondary">OWASP A01: Broken Access Control</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

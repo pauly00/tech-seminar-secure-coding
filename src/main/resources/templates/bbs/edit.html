@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('글 수정')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h4 class="fw-bold mb-4">글 수정</h4>
+            <div class="card border">
+                <div class="card-body">
+                    <form th:action="@{/bbs/{id}/edit(id=${bbs.bbsId})}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">제목</label>
+                            <input type="text" class="form-control" name="bbsTitle"
+                                   th:value="${bbs.bbsTitle}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">내용</label>
+                            <textarea class="form-control" name="bbsContent" rows="8"
+                                      th:text="${bbs.bbsContent}"></textarea>
+                        </div>
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="isPrivate"
+                                   name="isPrivate" value="true" th:checked="${bbs.private}">
+                            <label class="form-check-label" for="isPrivate">비밀글</label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-dark">수정 완료</button>
+                            <a th:href="@{/bbs/{id}(id=${bbs.bbsId})}"
+                               class="btn btn-outline-secondary">취소</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

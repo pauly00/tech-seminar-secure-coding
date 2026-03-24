@@ -1,0 +1,32 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# Java
+*.class
+*.log
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# 파일 업로드 디렉토리 (실습 시 생성됨)
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그
+logs/
+hs_err_pid*

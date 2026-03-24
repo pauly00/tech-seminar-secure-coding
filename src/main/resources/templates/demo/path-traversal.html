@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('경로 순회 데모')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-4">
+    <div class="mb-4">
+        <div class="demo-nav">
+            <a th:href="@{/demo}">← 데모 목록</a>
+            <a th:href="@{/demo/sql-injection}">SQL Injection</a>
+            <a th:href="@{/demo/xss}">XSS</a>
+            <a th:href="@{/demo/file-upload}">파일 업로드</a>
+            <a class="active" th:href="@{/demo/path-traversal}">경로 순회</a>
+        </div>
+        <h2 class="fw-bold">경로 순회 (Path Traversal)</h2>
+        <p class="text-muted">
+            <code>../</code> 를 이용해 허용된 디렉토리 밖의 파일에 접근하는 취약점입니다.
+        </p>
+        <span class="badge bg-dark">OWASP A01: Broken Access Control</span>
+        <span class="badge bg-secondary ms-1">CWE-22</span>
+    </div>
+
+    <!-- 환경 안내 -->
+    <div class="result-box result-box--info mb-4">
+        <strong>현재 기준 디렉토리:</strong> <code th:text="${safeFilesDir}">./safe-files</code><br>
+        <small>이 디렉토리 안의 파일만 읽어야 합니다. <code>../</code> 로 탈출하는 공격을 시도해보세요.</small>
+    </div>
+
+    <div class="attack-hint mb-4">
+        <strong>공격 예시 (기준 경로 밖 파일 읽기):</strong>
+        <ul>
+            <li>서버 설정: <code>../src/main/resources/application.properties</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li>Windows: <code>../../../Windows/win.ini</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li>Linux: <code>../../../etc/passwd</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li>상위 이동: <code>../../pom.xml</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+        </ul>
+        <strong>정상 파일:</strong>
+        <ul>
+            <li><code>readme.txt</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li><code>info.txt</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+        </ul>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- 취약한 경로 읽기 -->
+        <div class="col-lg-6">
+            <div class="demo-panel demo-panel--vulnerable">
+                <div class="panel-header">
+                    <h6 class="fw-bold mb-0">[취약] 검증 없는 파일 읽기</h6>
+                </div>
+                <ul class="small text-muted mb-3">
+                    <li>입력값을 그대로 경로에 붙임</li>
+                    <li>../를 통해 상위 디렉토리 탈출 가능</li>
+                </ul>
+                <form th:action="@{/demo/path-traversal/read/vuln}" method="get">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="filename"
+                               th:value="${vulnFilename}"
+                               placeholder="파일명 (예: ../../../pom.xml)">
+                        <button type="submit" class="btn btn-dark">읽기</button>
+                    </div>
+                </form>
+
+                <div th:if="${vulnFilename != null}" class="mt-3">
+                    <div class="code-block" th:text="'실제 경로: ' + ${vulnResolvedPath}"></div>
+                    <div th:if="${vulnError}" class="result-box result-box--error mt-2"
+                         th:text="${vulnError}"></div>
+                    <div th:if="${vulnContent != null}" class="mt-2">
+                        <div class="result-box result-box--error">
+                            <strong>파일 내용 노출:</strong>
+                        </div>
+                        <pre class="code-block mt-1" th:text="${vulnContent}"></pre>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">실제 코드 (PathTraversalController.java):</small>
+                    <div class="code-block-wrap">
+                        <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
+                        <div class="code-block">// 취약: 입력값을 그대로 경로에 붙임
+String requestedPath = safeFilesDir + "/" + filename;
+Files.readString(Path.of(requestedPath));</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 안전한 경로 읽기 -->
+        <div class="col-lg-6">
+            <div class="demo-panel demo-panel--secure">
+                <div class="panel-header">
+                    <h6 class="fw-bold mb-0">[안전] normalize + 경로 검증</h6>
+                </div>
+                <div class="result-box result-box--info mb-3">
+                    <strong>방어 원리:</strong><br>
+                    1. <code>normalize()</code> 로 <code>../</code> 제거<br>
+                    2. <code>startsWith(basePath)</code> 로 기준 경로 이탈 감지<br>
+                    3. 이탈 시 접근 거부
+                </div>
+                <form th:action="@{/demo/path-traversal/read/secure}" method="get">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="filename"
+                               th:value="${secureFilename}"
+                               placeholder="동일한 경로 입력해보세요">
+                        <button type="submit" class="btn btn-outline-dark">읽기</button>
+                    </div>
+                </form>
+
+                <div th:if="${secureFilename != null}" class="mt-3">
+                    <div class="code-block"
+                         th:text="'기준 경로: ' + ${secureBasePath} + '\n정규화된 경로: ' + ${secureResolvedPath}"></div>
+                    <div th:if="${secureError}" class="result-box result-box--info mt-2">
+                        <strong>공격 차단!</strong><br>
+                        <span th:text="${secureError}"></span>
+                    </div>
+                    <div th:if="${secureContent != null}" class="mt-2">
+                        <div class="result-box result-box--info">정상 파일 읽기 성공:</div>
+                        <pre class="code-block mt-1" th:text="${secureContent}"></pre>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">실제 코드 (PathTraversalController.java):</small>
+                    <div class="code-block-wrap">
+                        <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
+                        <div class="code-block">// 안전: normalize + startsWith 검사
+Path basePath = Path.of(safeFilesDir).toAbsolutePath().normalize();
+Path requestedPath = basePath.resolve(filename).normalize();
+
+if (!requestedPath.startsWith(basePath)) {
+    return "경로 순회 공격 감지! 접근 거부";
+}
+Files.readString(requestedPath);</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

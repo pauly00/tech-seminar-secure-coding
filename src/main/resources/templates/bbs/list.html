@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('1:1 문의')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">1:1 문의</h4>
+        <div class="d-flex gap-2">
+            <form th:action="@{/bbs/search}" method="get" class="d-flex gap-2">
+                <input type="text" class="form-control form-control-sm" name="keyword"
+                       placeholder="검색어">
+                <button type="submit" class="btn btn-sm btn-dark">취약 검색</button>
+                <button type="submit" name="secure" value="true"
+                        class="btn btn-sm btn-outline-dark">안전 검색</button>
+            </form>
+            <a th:if="${loginUser != null}" th:href="@{/bbs/write}"
+               class="btn btn-sm btn-dark">글쓰기</a>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="alert alert-secondary" th:text="${error}"></div>
+
+    <div th:if="${bbsList == null or #lists.isEmpty(bbsList)}" class="text-muted py-5 text-center">
+        게시글이 없습니다.
+    </div>
+
+    <div th:each="bbs : ${bbsList}">
+        <a th:href="@{/bbs/{id}(id=${bbs.bbsId})}" class="bbs-list-item">
+            <div class="bbs-title">
+                <span th:if="${bbs.private}" class="bbs-private-badge">비밀글</span>
+                <span th:text="${bbs.bbsTitle}">제목</span>
+            </div>
+            <div class="bbs-meta">
+                <span th:text="${bbs.bbsUserId}">작성자</span> ·
+                <span th:text="${#temporals.format(bbs.bbsDate, 'yyyy-MM-dd HH:mm')}">날짜</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

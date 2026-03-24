@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('게시글 조회')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border">
+                <div class="card-header bg-white d-flex justify-content-between align-items-start">
+                    <div>
+                        <span th:if="${bbs.private}"
+                              class="badge bg-secondary me-1">비밀글</span>
+                        <span th:text="${bbs.bbsTitle}" class="fw-bold fs-5">제목</span>
+                    </div>
+                    <small class="text-muted">#<span th:text="${bbs.bbsId}"></span></small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 text-muted small">
+                        작성자: <strong th:text="${bbs.bbsUserId}"></strong> &nbsp;·&nbsp;
+                        <span th:text="${#temporals.format(bbs.bbsDate,'yyyy-MM-dd HH:mm')}"></span>
+                    </div>
+
+                    <!-- 본문 — th:utext: XSS 취약 포인트 (교육용) -->
+                    <div class="border-top pt-3" th:utext="${bbs.bbsContent}">내용</div>
+
+                    <div th:if="${files != null and !#lists.isEmpty(files)}" class="mt-4">
+                        <strong class="small">첨부 파일</strong>
+                        <div th:each="file : ${files}" class="mt-1">
+                            <span class="badge bg-secondary"
+                                  th:text="${file.filename}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white d-flex gap-2">
+                    <a th:href="@{/bbs}" class="btn btn-sm btn-outline-secondary">목록</a>
+                    <a th:if="${loginUser == bbs.bbsUserId or loginRole == 'admin'}"
+                       th:href="@{/bbs/{id}/edit(id=${bbs.bbsId})}"
+                       class="btn btn-sm btn-outline-dark">수정</a>
+                    <form th:if="${loginUser == bbs.bbsUserId or loginRole == 'admin'}"
+                          th:action="@{/bbs/{id}/delete(id=${bbs.bbsId})}" method="post"
+                          onsubmit="return confirm('삭제하시겠습니까?')">
+                        <button type="submit" class="btn btn-sm btn-dark">삭제</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- XSS 실습 안내 -->
+            <div class="attack-hint mt-3">
+                <strong>XSS 취약점 포인트</strong><br>
+                <small>
+                    본문은 <code>th:utext</code>로 출력 — HTML 태그가 그대로 렌더링됩니다.<br>
+                    글쓰기에서 <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> 를 내용에 입력 후 조회해보세요.<br>
+                    방어: <code>th:utext</code> → <code>th:text</code> 로 변경
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
