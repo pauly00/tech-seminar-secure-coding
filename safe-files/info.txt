@@ -1,9 +1,9 @@
 서비스 정보
 ==========
 
-서비스명: HyperJump Express
+서비스명: FISA 웹 취약점 분석
 버전: 1.0.0
 운영 시간: 24시간 365일
 
 고객센터: 1588-XXXX
-이메일: support@hyperjump.com
+이메일: support@fisa.com

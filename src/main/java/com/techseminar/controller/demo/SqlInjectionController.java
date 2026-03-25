@@ -7,12 +7,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * SQL Injection demo controller
+ * SQL Injection 데모 컨트롤러
  *
- * Scenarios:
- *   1. Login bypass:  admin' --  / (any password)
- *   2. All rows:      %' OR '1'='1
- *   3. UNION attack:  %' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --
+ * 공격 시나리오:
+ *   1. 로그인 우회:  admin' --  / (아무 비밀번호)
+ *   2. 전체 조회:    %' OR '1'='1
+ *   3. UNION 공격:   %' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --
  */
 @Controller
 @RequestMapping("/demo/sql-injection")
@@ -32,7 +32,7 @@ public class SqlInjectionController {
         return "demo/sql-injection";
     }
 
-    // ==================== Search SQL Injection ====================
+    // ==================== 검색 SQL Injection ====================
 
     @PostMapping("/search/vuln")
     public String searchVuln(@RequestParam String keyword, Model model) {
@@ -52,7 +52,7 @@ public class SqlInjectionController {
         return "demo/sql-injection";
     }
 
-    // ==================== Login SQL Injection ====================
+    // ==================== 로그인 SQL Injection ====================
 
     @PostMapping("/login/vuln")
     public String loginVuln(@RequestParam String userId,

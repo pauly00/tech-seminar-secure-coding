@@ -72,12 +72,12 @@ public class BbsService {
         }
     }
 
-    // ==================== Search (SQL Injection demo) ====================
+    // ==================== 검색 (SQL Injection 데모) ====================
 
     /**
-     * [VULN] SQL Injection - keyword concatenated directly into SQL
+     * [취약] SQL Injection — 키워드를 SQL에 직접 연결
      *
-     * Attack examples:
+     * 공격 예시:
      *   keyword: %' UNION SELECT 1, user_id, user_password, user_name, user_email, user_gender, 0 FROM user_tb --
      *   keyword: %' OR '1'='1
      */
@@ -89,13 +89,13 @@ public class BbsService {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
             result.setRows(rows);
         } catch (Exception e) {
-            result.setError("SQL error: " + e.getMessage());
+            result.setError("SQL 오류: " + e.getMessage());
         }
         return result;
     }
 
     /**
-     * [SAFE] PreparedStatement - SQL Injection not possible
+     * [안전] PreparedStatement — SQL Injection 불가
      */
     public SearchResult searchSecure(String keyword) {
         String sql = "SELECT * FROM user_bbs WHERE bbs_title LIKE ?";
@@ -105,7 +105,7 @@ public class BbsService {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, "%" + keyword + "%");
             result.setRows(rows);
         } catch (Exception e) {
-            result.setError("SQL error: " + e.getMessage());
+            result.setError("SQL 오류: " + e.getMessage());
         }
         return result;
     }
@@ -125,7 +125,7 @@ public class BbsService {
         };
     }
 
-    // ==================== Search Result DTO ====================
+    // ==================== 검색 결과 DTO ====================
 
     public static class SearchResult {
         private String sqlExecuted;

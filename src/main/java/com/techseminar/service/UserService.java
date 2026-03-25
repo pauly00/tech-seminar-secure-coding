@@ -19,14 +19,14 @@ public class UserService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ==================== Login ====================
+    // ==================== 로그인 ====================
 
     /**
-     * [VULN] SQL Injection - string concatenation login
+     * [취약] SQL Injection — 문자열 연결 로그인
      *
-     * Attack examples:
-     *   ID: admin' --   PW: anything  -> bypasses password check
-     *   ID: ' OR '1'='1  -> returns first user
+     * 공격 예시:
+     *   ID: admin' --   PW: 아무거나  → 비밀번호 검사 우회
+     *   ID: ' OR '1'='1             → 첫 번째 사용자 반환
      */
     public LoginResult loginVulnerable(String userId, String password) {
         String sql = "SELECT * FROM user_tb WHERE user_id = '" + userId
@@ -43,17 +43,17 @@ public class UserService {
                 result.setRole("admin".equals(result.getUserId()) ? "admin" : "user");
             } else {
                 result.setSuccess(false);
-                result.setMessage("Invalid ID or password.");
+                result.setMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
             }
         } catch (Exception e) {
             result.setSuccess(false);
-            result.setMessage("DB error: " + e.getMessage());
+            result.setMessage("DB 오류: " + e.getMessage());
         }
         return result;
     }
 
     /**
-     * [SAFE] PreparedStatement login - SQL Injection not possible
+     * [안전] PreparedStatement 로그인 — SQL Injection 불가
      */
     public LoginResult loginSecure(String userId, String password) {
         String sql = "SELECT * FROM user_tb WHERE user_id = ? AND user_password = ?";
@@ -69,16 +69,16 @@ public class UserService {
                 result.setRole("admin".equals(result.getUserId()) ? "admin" : "user");
             } else {
                 result.setSuccess(false);
-                result.setMessage("Invalid ID or password.");
+                result.setMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
             }
         } catch (Exception e) {
             result.setSuccess(false);
-            result.setMessage("DB error: " + e.getMessage());
+            result.setMessage("DB 오류: " + e.getMessage());
         }
         return result;
     }
 
-    // ==================== Register ====================
+    // ==================== 회원가입 ====================
 
     public boolean register(User user) {
         String sql = "INSERT INTO user_tb(user_id, user_password, user_name, user_gender, user_email) VALUES (?,?,?,?,?)";
@@ -92,7 +92,7 @@ public class UserService {
         }
     }
 
-    // ==================== User Lookup ====================
+    // ==================== 사용자 조회 ====================
 
     public List<User> getList() {
         String sql = "SELECT * FROM user_tb ORDER BY id DESC";
@@ -118,7 +118,7 @@ public class UserService {
         };
     }
 
-    // ==================== Login Result DTO ====================
+    // ==================== 로그인 결과 DTO ====================
 
     public static class LoginResult {
         private boolean success;

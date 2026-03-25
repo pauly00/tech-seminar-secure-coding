@@ -24,7 +24,7 @@ public class FileService {
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
 
-    // Allowed extension whitelist
+    // 허용 확장자 화이트리스트
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
         "jpg", "jpeg", "png", "gif", "pdf", "txt", "docx", "xlsx", "zip"
     );
@@ -33,11 +33,11 @@ public class FileService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ==================== File Upload (demo) ====================
+    // ==================== 파일 업로드 (데모) ====================
 
     /**
-     * [VULN] No extension check - any file type accepted
-     * -> webshell.jsp, malware.exe etc. can be uploaded
+     * [취약] 확장자 검사 없음 — 모든 파일 형식 허용
+     * → webshell.jsp, malware.exe 등 업로드 가능
      */
     public UploadResult uploadVulnerable(MultipartFile file, int bbsId) {
         UploadResult result = new UploadResult();
@@ -45,35 +45,35 @@ public class FileService {
 
         if (file.isEmpty()) {
             result.setSuccess(false);
-            result.setMessage("File is empty.");
+            result.setMessage("파일이 비어 있습니다.");
             return result;
         }
 
         try {
-            Path dir = Paths.get(uploadDir, String.valueOf(bbsId));
+            Path dir = Paths.get(uploadDir).toAbsolutePath().resolve(String.valueOf(bbsId));
             Files.createDirectories(dir);
 
-            // VULN: save with original filename (path manipulation + webshell possible)
+            // [취약] 원본 파일명으로 저장 — 경로 조작 및 웹쉘 업로드 가능
             String originalFilename = file.getOriginalFilename();
             Path dest = dir.resolve(originalFilename);
-            file.transferTo(dest.toFile());
+            Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
 
             saveFileInfo(bbsId, originalFilename, originalFilename);
 
             result.setSuccess(true);
             result.setSavedName(originalFilename);
             result.setSavedPath(dest.toString());
-            result.setMessage("Saved (no validation): " + originalFilename);
+            result.setMessage("저장 완료 (검증 없음): " + originalFilename);
         } catch (IOException e) {
             result.setSuccess(false);
-            result.setMessage("Save error: " + e.getMessage());
+            result.setMessage("저장 오류: " + e.getMessage());
         }
         return result;
     }
 
     /**
-     * [SAFE] Whitelist + UUID filename
-     * -> executable files rejected, filename unpredictable
+     * [안전] 화이트리스트 + UUID 파일명
+     * → 실행 파일 차단, 파일명 예측 불가
      */
     public UploadResult uploadSecure(MultipartFile file, int bbsId) {
         UploadResult result = new UploadResult();
@@ -81,48 +81,48 @@ public class FileService {
 
         if (file.isEmpty()) {
             result.setSuccess(false);
-            result.setMessage("File is empty.");
+            result.setMessage("파일이 비어 있습니다.");
             return result;
         }
 
         String originalFilename = file.getOriginalFilename();
         String extension = getExtension(originalFilename).toLowerCase();
 
-        // SAFE: whitelist check
+        // [안전] 화이트리스트 검사
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             result.setSuccess(false);
-            result.setMessage("Disallowed file type: ." + extension
-                + "  Allowed: " + ALLOWED_EXTENSIONS);
+            result.setMessage("허용되지 않는 파일 형식: ." + extension
+                + "  허용 목록: " + ALLOWED_EXTENSIONS);
             return result;
         }
 
         try {
-            Path dir = Paths.get(uploadDir, "secure", String.valueOf(bbsId));
+            Path dir = Paths.get(uploadDir).toAbsolutePath().resolve("secure").resolve(String.valueOf(bbsId));
             Files.createDirectories(dir);
 
-            // SAFE: randomize filename with UUID
+            // [안전] UUID로 파일명 무작위화
             String savedName = UUID.randomUUID().toString() + "." + extension;
             Path dest = dir.resolve(savedName);
-            file.transferTo(dest.toFile());
+            Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
 
             saveFileInfo(bbsId, originalFilename, savedName);
 
             result.setSuccess(true);
             result.setSavedName(savedName);
             result.setSavedPath(dest.toString());
-            result.setMessage("Saved (whitelist passed): " + originalFilename + " -> " + savedName);
+            result.setMessage("저장 완료 (화이트리스트 통과): " + originalFilename + " -> " + savedName);
         } catch (IOException e) {
             result.setSuccess(false);
-            result.setMessage("Save error: " + e.getMessage());
+            result.setMessage("저장 오류: " + e.getMessage());
         }
         return result;
     }
 
-    // ==================== ZIP Extraction (ZIP Slip demo) ====================
+    // ==================== ZIP 압축 해제 (ZIP Slip 데모) ====================
 
     /**
-     * [VULN] No path validation during ZIP extraction - ZIP Slip possible
-     * -> entry name like ../../evil.txt can escape the extraction directory
+     * [취약] ZIP 해제 시 경로 검증 없음 — ZIP Slip 가능
+     * → ../../evil.txt 같은 엔트리 이름으로 해제 디렉토리 탈출 가능
      */
     public ZipExtractResult extractVulnerable(MultipartFile file) {
         ZipExtractResult result = new ZipExtractResult();
@@ -135,7 +135,7 @@ public class FileService {
             try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    // VULN: entry name used directly - ../ can escape extractDir
+                    // [취약] 엔트리 이름 직접 사용 — ../ 로 extractDir 탈출 가능
                     Path dest = extractDir.resolve(entry.getName());
                     if (entry.isDirectory()) {
                         Files.createDirectories(dest);
@@ -149,16 +149,16 @@ public class FileService {
             }
             result.setSuccess(true);
             result.setExtracted(extracted);
-            result.setMessage("Extracted " + extracted.size() + " file(s) — no path validation");
+            result.setMessage("압축 해제 완료 " + extracted.size() + "개 — 경로 검증 없음");
         } catch (IOException e) {
             result.setSuccess(false);
-            result.setMessage("Extract error: " + e.getMessage());
+            result.setMessage("압축 해제 오류: " + e.getMessage());
         }
         return result;
     }
 
     /**
-     * [SAFE] normalize() + startsWith() blocks ZIP Slip
+     * [안전] normalize() + startsWith() 로 ZIP Slip 차단
      */
     public ZipExtractResult extractSecure(MultipartFile file) {
         ZipExtractResult result = new ZipExtractResult();
@@ -172,10 +172,10 @@ public class FileService {
             try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    // SAFE: normalize and verify path stays within extractDir
+                    // [안전] 경로 정규화 후 extractDir 내부인지 검사
                     Path dest = extractDir.resolve(entry.getName()).normalize();
                     if (!dest.startsWith(extractDir)) {
-                        blocked.add(entry.getName() + "  (BLOCKED - path traversal)");
+                        blocked.add(entry.getName() + "  (차단 - 경로 순회)");
                         zis.closeEntry();
                         continue;
                     }
@@ -192,15 +192,15 @@ public class FileService {
             result.setSuccess(true);
             result.setExtracted(extracted);
             result.setBlocked(blocked);
-            result.setMessage("Extracted: " + extracted.size() + ", Blocked: " + blocked.size());
+            result.setMessage("해제: " + extracted.size() + "개, 차단: " + blocked.size() + "개");
         } catch (IOException e) {
             result.setSuccess(false);
-            result.setMessage("Extract error: " + e.getMessage());
+            result.setMessage("압축 해제 오류: " + e.getMessage());
         }
         return result;
     }
 
-    // ==================== Helpers ====================
+    // ==================== 유틸리티 ====================
 
     private void saveFileInfo(int bbsId, String filename, String filerealname) {
         String sql = "INSERT INTO user_bbs_file(bbs_id, filename, filerealname) VALUES(?,?,?)";
@@ -212,7 +212,7 @@ public class FileService {
         return filename.substring(filename.lastIndexOf('.') + 1);
     }
 
-    // ==================== BBS File List ====================
+    // ==================== BBS 파일 목록 ====================
 
     public List<FileInfo> getFilesByBbsId(int bbsId) {
         String sql = "SELECT * FROM user_bbs_file WHERE bbs_id = ?";

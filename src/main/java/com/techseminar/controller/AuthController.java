@@ -20,7 +20,7 @@ public class AuthController {
         this.userService = userService;
     }
 
-    // ==================== Login ====================
+    // ==================== 로그인 ====================
 
     @GetMapping("/login")
     public String loginForm(HttpSession session) {
@@ -29,9 +29,9 @@ public class AuthController {
     }
 
     /**
-     * Login handler
-     * secure=true  -> PreparedStatement + session (safe)
-     * secure=false -> string concat SQL + cookie (vuln: SQL Injection + cookie theft)
+     * 로그인 처리
+     * secure=true  -> PreparedStatement + 세션 저장 (안전)
+     * secure=false -> 문자열 연결 SQL + 쿠키 저장 (취약: SQL Injection + 쿠키 탈취)
      */
     @PostMapping("/login")
     public String login(@RequestParam String userId,
@@ -47,15 +47,15 @@ public class AuthController {
 
         if (result.isSuccess()) {
             if (secure) {
-                // [SAFE] store in HttpSession
+                // [안전] HttpSession에 저장
                 session.setAttribute("loginUser", result.getUserId());
                 session.setAttribute("loginRole", result.getRole());
             } else {
-                // [VULN] cookie without HttpOnly - readable by JS
+                // [취약] HttpOnly 미설정 쿠키 — JS에서 읽기 가능
                 Cookie userCookie = new Cookie("userID", result.getUserId());
                 userCookie.setPath("/");
                 userCookie.setMaxAge(86400);
-                // HttpOnly not set - accessible via document.cookie
+                // HttpOnly 미설정 — document.cookie로 접근 가능
 
                 Cookie roleCookie = new Cookie("role", result.getRole());
                 roleCookie.setPath("/");
@@ -64,7 +64,7 @@ public class AuthController {
                 response.addCookie(userCookie);
                 response.addCookie(roleCookie);
 
-                // also store in session for app functionality
+                // 앱 기능을 위해 세션에도 저장
                 session.setAttribute("loginUser", result.getUserId());
                 session.setAttribute("loginRole", result.getRole());
             }
@@ -76,12 +76,12 @@ public class AuthController {
         }
     }
 
-    // ==================== Logout ====================
+    // ==================== 로그아웃 ====================
 
     @PostMapping("/logout")
     public String logout(HttpSession session, HttpServletResponse response) {
         session.invalidate();
-        // clear cookies
+        // 쿠키 삭제
         Cookie c1 = new Cookie("userID", "");
         c1.setMaxAge(0); c1.setPath("/");
         Cookie c2 = new Cookie("role", "");
@@ -91,7 +91,7 @@ public class AuthController {
         return "redirect:/";
     }
 
-    // ==================== Signup ====================
+    // ==================== 회원가입 ====================
 
     @GetMapping("/signup")
     public String signupForm() {
@@ -115,7 +115,7 @@ public class AuthController {
         if (userService.register(user)) {
             return "redirect:/login";
         } else {
-            model.addAttribute("error", "Registration failed. ID may already exist.");
+            model.addAttribute("error", "회원가입 실패. 이미 존재하는 아이디일 수 있습니다.");
             return "auth/signup";
         }
     }

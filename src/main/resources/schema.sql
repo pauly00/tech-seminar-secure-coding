@@ -1,5 +1,5 @@
--- Tech Seminar Secure Coding - Schema
--- Auto-run on startup (IF NOT EXISTS prevents duplicate errors)
+-- 기술세미나 시큐어코딩 - 스키마
+-- 시작 시 자동 실행 (IF NOT EXISTS로 중복 오류 방지)
 
 CREATE DATABASE IF NOT EXISTS `techseminar` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `techseminar`;

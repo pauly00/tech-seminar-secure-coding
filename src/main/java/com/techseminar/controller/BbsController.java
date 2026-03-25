@@ -24,7 +24,7 @@ public class BbsController {
         this.fileService = fileService;
     }
 
-    // ==================== List ====================
+    // ==================== 목록 ====================
 
     @GetMapping
     public String list(Model model, HttpSession session) {
@@ -34,7 +34,7 @@ public class BbsController {
         return "bbs/list";
     }
 
-    // ==================== View ====================
+    // ==================== 조회 ====================
 
     @GetMapping("/{bbsId}")
     public String view(@PathVariable int bbsId, Model model, HttpSession session) {
@@ -44,9 +44,9 @@ public class BbsController {
         String loginUser = (String) session.getAttribute("loginUser");
         String loginRole = (String) session.getAttribute("loginRole");
 
-        // Private post access control
+        // 비밀글 접근 제어
         if (bbs.isPrivate() && !"admin".equals(loginRole) && !bbs.getBbsUserId().equals(loginUser)) {
-            model.addAttribute("error", "Private post.");
+            model.addAttribute("error", "비밀글입니다.");
             return "bbs/list";
         }
 
@@ -59,7 +59,7 @@ public class BbsController {
         return "bbs/view";
     }
 
-    // ==================== Write ====================
+    // ==================== 글쓰기 ====================
 
     @GetMapping("/write")
     public String writeForm(HttpSession session, Model model) {
@@ -82,7 +82,7 @@ public class BbsController {
 
         int bbsId = bbsService.writeAndGetId(bbsTitle, loginUser, bbsContent, isPrivate);
 
-        // File upload
+        // 파일 업로드
         if (file != null && !file.isEmpty()) {
             if (secureUpload) {
                 fileService.uploadSecure(file, bbsId);
@@ -94,7 +94,7 @@ public class BbsController {
         return "redirect:/bbs";
     }
 
-    // ==================== Edit ====================
+    // ==================== 수정 ====================
 
     @GetMapping("/{bbsId}/edit")
     public String editForm(@PathVariable int bbsId, HttpSession session, Model model) {
@@ -121,7 +121,7 @@ public class BbsController {
         return "redirect:/bbs/" + bbsId;
     }
 
-    // ==================== Delete ====================
+    // ==================== 삭제 ====================
 
     @PostMapping("/{bbsId}/delete")
     public String delete(@PathVariable int bbsId, HttpSession session) {
@@ -131,7 +131,7 @@ public class BbsController {
         return "redirect:/bbs";
     }
 
-    // ==================== Search ====================
+    // ==================== 검색 ====================
 
     @GetMapping("/search")
     public String search(@RequestParam(defaultValue = "") String keyword,
