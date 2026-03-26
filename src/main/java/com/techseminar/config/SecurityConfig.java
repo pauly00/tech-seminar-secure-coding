@@ -8,8 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * 보안 설정: 데모 목적으로 Spring Security의 보호 기능을 의도적으로 비활성화.
- * 이 설정을 운영 환경에서 사용하지 말 것.
+ * 보안 설정: 데모 목적으로 Spring Security의 보호 기능을 의도적으로 비활성화
  */
 @Configuration
 @EnableWebSecurity
