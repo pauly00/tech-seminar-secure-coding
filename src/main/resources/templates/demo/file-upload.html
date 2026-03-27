@@ -188,7 +188,62 @@ file.transferTo(dir.resolve(savedName).toFile());</div>
         </div>
     </div>
 
-    <!-- ===== 섹션 2: ZIP Slip ===== -->
+    <!-- ===== 섹션 2: 웹쉘 실행 ===== -->
+    <h5 class="fw-bold border-bottom pb-2 mb-3">웹쉘 실행 — 업로드 후 RCE 시연</h5>
+    <p class="text-muted small mb-3">
+        위 [취약] 업로드로 <code>webshell.jsp</code>를 올린 뒤, 아래에서 명령어를 실행하세요.<br>
+        실제 공격자는 <code>/demo/file-upload/webshell?cmd=whoami</code> 같은 URL로 직접 접근합니다.
+    </p>
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="demo-panel demo-panel--vulnerable">
+                <div class="panel-header">
+                    <h6 class="fw-bold mb-0">[취약] 업로드된 webshell.jsp 실행</h6>
+                </div>
+                <form th:action="@{/demo/file-upload/webshell}" method="get">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text" style="font-size:.85rem;">?cmd=</span>
+                        <input type="text" class="form-control font-monospace"
+                               name="cmd" placeholder="whoami"
+                               th:value="${webshellCmd}">
+                        <button type="submit" class="btn btn-dark">실행</button>
+                    </div>
+                </form>
+                <div class="mt-1 mb-3">
+                    <small class="text-muted">직접 URL 접근도 동일:&nbsp;</small>
+                    <code style="font-size:.8rem;">/demo/file-upload/webshell?cmd=whoami</code>
+                </div>
+
+                <div th:if="${webshellResult != null}">
+                    <!-- 웹쉘 미업로드 -->
+                    <div th:if="${!webshellResult.shellExists}" class="result-box result-box--info">
+                        <div th:text="${webshellResult.output}"></div>
+                    </div>
+                    <!-- 웹쉘 존재 -->
+                    <div th:if="${webshellResult.shellExists}">
+                        <div class="result-box result-box--error">
+                            <small class="fw-bold d-block mb-1">
+                                웹쉘 존재 확인: <code th:text="${webshellResult.shellPath}"></code>
+                            </small>
+                            <small class="fw-bold d-block mb-1">실행 결과:</small>
+                            <pre style="margin:0; white-space:pre-wrap; font-size:.85rem;"
+                                 th:text="${webshellResult.output}"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">공격 흐름:</small>
+                    <div class="code-block" style="font-size:.8rem;">1. POST /demo/file-upload/vuln  → webshell.jsp 업로드
+2. GET  /demo/file-upload/webshell?cmd=whoami  → RCE 실행
+3. GET  /demo/file-upload/webshell?cmd=dir     → 디렉토리 열람
+4. GET  /demo/file-upload/webshell?cmd=hostname → 서버 정보 탈취</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 섹션 3: ZIP Slip ===== -->
     <h5 class="fw-bold border-bottom pb-2 mb-3">ZIP Slip — Java 환경 고유 취약점 (CWE-22)</h5>
     <p class="text-muted small mb-3">
         ZIP 내 파일 경로에 <code>../</code>를 포함시키면, 압축 해제 시 서버의 임의 경로에 파일을 덮어쓸 수 있습니다.

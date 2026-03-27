@@ -2,6 +2,7 @@ package com.techseminar.controller.demo;
 
 import com.techseminar.service.FileService;
 import com.techseminar.service.FileService.UploadResult;
+import com.techseminar.service.FileService.WebshellResult;
 import com.techseminar.service.FileService.ZipExtractResult;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -51,6 +52,17 @@ public class FileUploadDemoController {
         UploadResult result = fileService.uploadSecure(file, DEMO_BBS_ID);
         model.addAttribute("activeDemo", "file-upload");
         model.addAttribute("secureResult", result);
+        return "demo/file-upload";
+    }
+
+    // ==================== 웹쉘 실행 ====================
+
+    @GetMapping("/webshell")
+    public String webshell(@RequestParam(required = false) String cmd, Model model) {
+        WebshellResult result = fileService.executeWebshell(cmd);
+        model.addAttribute("activeDemo", "file-upload");
+        model.addAttribute("webshellResult", result);
+        model.addAttribute("webshellCmd", cmd != null ? cmd : "");
         return "demo/file-upload";
     }
 

