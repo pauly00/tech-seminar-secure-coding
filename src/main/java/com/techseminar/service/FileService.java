@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -225,8 +226,9 @@ public class FileService {
             Process process = Runtime.getRuntime().exec(command);
             StringBuilder sb = new StringBuilder();
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                 BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            Charset cs = os.contains("win") ? Charset.forName("MS949") : Charset.forName("UTF-8");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), cs));
+                 BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), cs))) {
                 String line;
                 while ((line = reader.readLine()) != null) sb.append(line).append("\n");
                 while ((line = errReader.readLine()) != null) sb.append("[ERR] ").append(line).append("\n");

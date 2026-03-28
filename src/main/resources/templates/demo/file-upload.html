@@ -47,7 +47,7 @@
                     <div class="code-block">// 원본 파일명 저장
 String originalFilename = file.getOriginalFilename();
 Path dest = dir.resolve(originalFilename);
-file.transferTo(dest.toFile());</div>
+Files.copy(file.getInputStream(), dest, REPLACE_EXISTING);</div>
                 </div>
             </div>
         </div>
@@ -103,6 +103,14 @@ file.transferTo(dir.resolve(savedName).toFile());</div>
                 <div class="panel-header">
                     <h6 class="bold">[취약] 업로드된 webshell.jsp 실행</h6>
                 </div>
+                <div class="attack-hint mb-sm">
+                    <strong>순서:</strong>
+                    <ol style="margin:.25rem 0 0 1.2rem; padding:0;">
+                        <li>위 <strong>[취약] 파일 업로드</strong>에서 <code>samples/webshell.jsp</code> 파일 선택 후 업로드</li>
+                        <li>아래 입력창에 실행할 <strong>명령어만</strong> 입력 (예: <code>whoami</code>, <code>dir</code>)</li>
+                        <li>실행 클릭</li>
+                    </ol>
+                </div>
                 <form th:action="@{/demo/file-upload/webshell}" method="get">
                     <div class="input-row mb-sm">
                         <span class="input-prefix">?cmd=</span>
@@ -110,7 +118,6 @@ file.transferTo(dir.resolve(savedName).toFile());</div>
                         <button type="submit" class="btn">실행</button>
                     </div>
                 </form>
-                <small class="text-muted">직접 URL 접근도 동일: <code>/demo/file-upload/webshell?cmd=whoami</code></small>
 
                 <div th:if="${webshellResult != null}" id="webshell-result" class="mt">
                     <div th:if="${!webshellResult.shellExists}" class="result-box result-box--info">
@@ -126,13 +133,6 @@ file.transferTo(dir.resolve(savedName).toFile());</div>
                                  th:text="${webshellResult.output}"></pre>
                         </div>
                     </div>
-                </div>
-
-                <div class="mt">
-                    <small class="text-muted">공격 흐름:</small>
-                    <div class="code-block" style="font-size:.8rem;">1. POST /demo/file-upload/vuln  → webshell.jsp 업로드
-2. GET  /demo/file-upload/webshell?cmd=whoami  → RCE 실행
-3. GET  /demo/file-upload/webshell?cmd=dir     → 디렉토리 열람</div>
                 </div>
             </div>
         </div>

