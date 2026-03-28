@@ -5,8 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -19,14 +17,9 @@ public class UserService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ==================== 로그인 ====================
-
     /**
-     * [취약] SQL Injection — 문자열 연결 로그인
-     *
-     * 공격 예시:
-     *   ID: admin' --   PW: 아무거나  → 비밀번호 검사 우회
-     *   ID: ' OR '1'='1             → 첫 번째 사용자 반환
+     * [취약] 문자열 연결 로그인 쿼리 — SQL Injection으로 인증 우회 가능.
+     * 예시: ID = admin' --  → 비밀번호 검사 구문이 주석 처리되어 우회됨
      */
     public LoginResult loginVulnerable(String userId, String password) {
         String sql = "SELECT * FROM user_tb WHERE user_id = '" + userId
@@ -52,9 +45,7 @@ public class UserService {
         return result;
     }
 
-    /**
-     * [안전] PreparedStatement 로그인 — SQL Injection 불가
-     */
+    /** [안전] 파라미터 바인딩 로그인 — 공격 문자열이 리터럴 값으로 처리되어 우회 불가 */
     public LoginResult loginSecure(String userId, String password) {
         String sql = "SELECT * FROM user_tb WHERE user_id = ? AND user_password = ?";
 
@@ -78,30 +69,24 @@ public class UserService {
         return result;
     }
 
-    // ==================== 회원가입 ====================
-
     public boolean register(User user) {
         String sql = "INSERT INTO user_tb(user_id, user_password, user_name, user_gender, user_email) VALUES (?,?,?,?,?)";
         try {
-            int rows = jdbcTemplate.update(sql,
+            return jdbcTemplate.update(sql,
                 user.getUserId(), user.getUserPassword(),
-                user.getUserName(), user.getUserGender(), user.getUserEmail());
-            return rows > 0;
+                user.getUserName(), user.getUserGender(), user.getUserEmail()) > 0;
         } catch (Exception e) {
             return false;
         }
     }
 
-    // ==================== 사용자 조회 ====================
-
     public List<User> getList() {
-        String sql = "SELECT * FROM user_tb ORDER BY id DESC";
-        return jdbcTemplate.query(sql, userRowMapper());
+        return jdbcTemplate.query("SELECT * FROM user_tb ORDER BY id DESC", userRowMapper());
     }
 
     public User findById(String userId) {
-        String sql = "SELECT * FROM user_tb WHERE user_id = ?";
-        List<User> users = jdbcTemplate.query(sql, userRowMapper(), userId);
+        List<User> users = jdbcTemplate.query(
+            "SELECT * FROM user_tb WHERE user_id = ?", userRowMapper(), userId);
         return users.isEmpty() ? null : users.get(0);
     }
 
@@ -117,8 +102,6 @@ public class UserService {
             return u;
         };
     }
-
-    // ==================== 로그인 결과 DTO ====================
 
     public static class LoginResult {
         private boolean success;

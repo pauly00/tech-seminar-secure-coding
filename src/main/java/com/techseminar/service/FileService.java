@@ -1,6 +1,5 @@
 package com.techseminar.service;
 
-import com.techseminar.model.FileInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,6 @@ public class FileService {
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
 
-    // 허용 확장자 화이트리스트
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
         "jpg", "jpeg", "png", "gif", "pdf", "txt", "docx", "xlsx", "zip"
     );
@@ -35,11 +33,9 @@ public class FileService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ==================== 파일 업로드 (데모) ====================
-
     /**
-     * [취약] 확장자 검사 없음 — 모든 파일 형식 허용
-     * → webshell.jsp, malware.exe 등 업로드 가능
+     * [취약] 확장자 검사 없음 — .jsp, .sh 등 실행 파일도 업로드 가능.
+     * 원본 파일명 그대로 저장하므로 저장 경로 예측도 가능.
      */
     public UploadResult uploadVulnerable(MultipartFile file, int bbsId) {
         UploadResult result = new UploadResult();
@@ -55,9 +51,8 @@ public class FileService {
             Path dir = Paths.get(uploadDir).toAbsolutePath().resolve(String.valueOf(bbsId));
             Files.createDirectories(dir);
 
-            // [취약] 원본 파일명으로 저장 — 경로 조작 및 웹쉘 업로드 가능
             String originalFilename = file.getOriginalFilename();
-            Path dest = dir.resolve(originalFilename);
+            Path dest = dir.resolve(originalFilename); // 취약: 원본 파일명 사용
             Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
 
             saveFileInfo(bbsId, originalFilename, originalFilename);
@@ -74,8 +69,8 @@ public class FileService {
     }
 
     /**
-     * [안전] 화이트리스트 + UUID 파일명
-     * → 실행 파일 차단, 파일명 예측 불가
+     * [안전] 화이트리스트 확장자 검사 + UUID 파일명 적용.
+     * 실행 파일 차단, 파일명 무작위화로 경로 예측 불가.
      */
     public UploadResult uploadSecure(MultipartFile file, int bbsId) {
         UploadResult result = new UploadResult();
@@ -90,8 +85,7 @@ public class FileService {
         String originalFilename = file.getOriginalFilename();
         String extension = getExtension(originalFilename).toLowerCase();
 
-        // [안전] 화이트리스트 검사
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+        if (!ALLOWED_EXTENSIONS.contains(extension)) { // 안전: 화이트리스트 검사
             result.setSuccess(false);
             result.setMessage("허용되지 않는 파일 형식: ." + extension
                 + "  허용 목록: " + ALLOWED_EXTENSIONS);
@@ -102,8 +96,7 @@ public class FileService {
             Path dir = Paths.get(uploadDir).toAbsolutePath().resolve("secure").resolve(String.valueOf(bbsId));
             Files.createDirectories(dir);
 
-            // [안전] UUID로 파일명 무작위화
-            String savedName = UUID.randomUUID().toString() + "." + extension;
+            String savedName = UUID.randomUUID().toString() + "." + extension; // 안전: UUID 파일명
             Path dest = dir.resolve(savedName);
             Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
 
@@ -120,11 +113,9 @@ public class FileService {
         return result;
     }
 
-    // ==================== ZIP 압축 해제 (ZIP Slip 데모) ====================
-
     /**
-     * [취약] ZIP 해제 시 경로 검증 없음 — ZIP Slip 가능
-     * → ../../evil.txt 같은 엔트리 이름으로 해제 디렉토리 탈출 가능
+     * [취약] ZIP 해제 시 경로 검증 없음 — ZIP Slip 공격 가능.
+     * ../../evil.txt 같은 엔트리 이름으로 해제 디렉토리 탈출.
      */
     public ZipExtractResult extractVulnerable(MultipartFile file) {
         ZipExtractResult result = new ZipExtractResult();
@@ -137,8 +128,7 @@ public class FileService {
             try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    // [취약] 엔트리 이름 직접 사용 — ../ 로 extractDir 탈출 가능
-                    Path dest = extractDir.resolve(entry.getName());
+                    Path dest = extractDir.resolve(entry.getName()); // 취약: ../ 로 탈출 가능
                     if (entry.isDirectory()) {
                         Files.createDirectories(dest);
                     } else {
@@ -160,7 +150,8 @@ public class FileService {
     }
 
     /**
-     * [안전] normalize() + startsWith() 로 ZIP Slip 차단
+     * [안전] normalize() + startsWith()로 ZIP Slip 차단.
+     * 해제 디렉토리 밖으로 나가려는 엔트리는 건너뜀.
      */
     public ZipExtractResult extractSecure(MultipartFile file) {
         ZipExtractResult result = new ZipExtractResult();
@@ -174,9 +165,8 @@ public class FileService {
             try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    // [안전] 경로 정규화 후 extractDir 내부인지 검사
                     Path dest = extractDir.resolve(entry.getName()).normalize();
-                    if (!dest.startsWith(extractDir)) {
+                    if (!dest.startsWith(extractDir)) { // 안전: 경로 탈출 차단
                         blocked.add(entry.getName() + "  (차단 - 경로 순회)");
                         zis.closeEntry();
                         continue;
@@ -202,23 +192,9 @@ public class FileService {
         return result;
     }
 
-    // ==================== 유틸리티 ====================
-
-    private void saveFileInfo(int bbsId, String filename, String filerealname) {
-        String sql = "INSERT INTO user_bbs_file(bbs_id, filename, filerealname) VALUES(?,?,?)";
-        jdbcTemplate.update(sql, bbsId, filename, filerealname);
-    }
-
-    private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "";
-        return filename.substring(filename.lastIndexOf('.') + 1);
-    }
-
-    // ==================== 웹쉘 실행 (데모) ====================
-
     /**
-     * [취약] 업로드된 webshell.jsp가 존재하면 cmd 파라미터를 서버에서 실행
-     * → 파일 업로드 취약점 + 서버 실행 가능 환경의 결합을 시연
+     * [취약] 업로드된 webshell.jsp를 확인하고 서버에서 명령어를 실행.
+     * 파일 업로드 취약점 → 웹쉘 업로드 → RCE 공격 흐름을 시연합니다.
      */
     public WebshellResult executeWebshell(String cmd) {
         WebshellResult result = new WebshellResult();
@@ -266,6 +242,17 @@ public class FileService {
         return result;
     }
 
+    private void saveFileInfo(int bbsId, String filename, String filerealname) {
+        jdbcTemplate.update(
+            "INSERT INTO user_bbs_file(bbs_id, filename, filerealname) VALUES(?,?,?)",
+            bbsId, filename, filerealname);
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null || !filename.contains(".")) return "";
+        return filename.substring(filename.lastIndexOf('.') + 1);
+    }
+
     public static class WebshellResult {
         private boolean success;
         private boolean shellExists;
@@ -281,26 +268,6 @@ public class FileService {
         public String getOutput() { return output; }
         public void setOutput(String output) { this.output = output; }
     }
-
-    // ==================== BBS 파일 목록 ====================
-
-    public List<FileInfo> getFilesByBbsId(int bbsId) {
-        String sql = "SELECT * FROM user_bbs_file WHERE bbs_id = ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            FileInfo f = new FileInfo();
-            f.setId(rs.getInt("id"));
-            f.setBbsId(rs.getInt("bbs_id"));
-            f.setFilename(rs.getString("filename"));
-            f.setFilerealname(rs.getString("filerealname"));
-            return f;
-        }, bbsId);
-    }
-
-    public void deleteFilesByBbsId(int bbsId) {
-        jdbcTemplate.update("DELETE FROM user_bbs_file WHERE bbs_id=?", bbsId);
-    }
-
-    // ==================== DTO ====================
 
     public static class UploadResult {
         private boolean success;
