@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('로그인')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container" style="max-width:400px; margin-top:4rem;">
+    <h4 class="bold mb">로그인</h4>
+    <p class="text-muted small mb">XSS 쿠키 탈취 데모를 하려면 먼저 로그인해서 세션 쿠키를 만드세요.</p>
+
+    <div th:if="${error}" class="result-box result-box--error mb">
+        <span th:text="${error}"></span>
+    </div>
+
+    <form th:action="@{/login}" method="post">
+        <div class="mb-sm">
+            <input type="text" name="userId" placeholder="아이디" class="mono" style="width:100%; box-sizing:border-box;">
+        </div>
+        <div class="mb-sm">
+            <input type="password" name="password" placeholder="비밀번호" class="mono" style="width:100%; box-sizing:border-box;">
+        </div>
+        <button type="submit" class="btn" style="width:100%;">로그인</button>
+    </form>
+
+    <div class="result-box result-box--info mt">
+        <strong>테스트 계정</strong><br>
+        admin / 1234 &nbsp;·&nbsp; alice / 1234 &nbsp;·&nbsp; bob / 1234
+    </div>
+</div>
+</body>
+</html>

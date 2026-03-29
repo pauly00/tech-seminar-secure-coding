@@ -10,6 +10,16 @@
         <p class="text-muted">악성 스크립트가 페이지에 삽입되어 다른 사용자 브라우저에서 실행됨</p>
     </div>
 
+    <!-- 로그인 안내 -->
+    <div th:if="${session.loginUser == null}" class="result-box result-box--info mb">
+        쿠키 탈취 데모를 하려면 먼저 <a th:href="@{/login}"><strong>로그인</strong></a>해서 세션 쿠키(JSESSIONID)를 만드세요.
+        로그인하지 않으면 탈취할 쿠키가 없어 <code>/demo/steal</code> 에 아무것도 뜨지 않습니다.
+    </div>
+    <div th:if="${session.loginUser != null}" class="result-box result-box--info mb">
+        <strong th:text="${session.loginUser}"></strong> 로 로그인된 상태입니다.
+        이제 아래 취약 댓글창에 쿠키 탈취 페이로드를 입력하면 JSESSIONID가 <a th:href="@{/demo/steal}" target="_blank">/demo/steal</a>에 기록됩니다.
+    </div>
+
     <!-- Stored XSS -->
     <h5 class="section-heading">Stored XSS (저장형)</h5>
     <p class="text-muted small mb">입력값이 서버에 저장되어 이후 모든 사용자 조회 시 실행됨</p>

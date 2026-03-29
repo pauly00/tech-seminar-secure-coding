@@ -8,9 +8,11 @@ SQL Injection, XSS, 파일 업로드 취약점, 경로 순회 등 대표적인 �
 
 #### 환경 요구사항
 
-- Java 17+
-- Maven 3.8+
-- MySQL 8.0+
+| 항목 | 버전 |
+|------|------|
+| Java | 17+ |
+| Maven | 3.8+ |
+| MySQL | 8.0+ |
 
 #### DB 설정
 
@@ -60,19 +62,19 @@ mvn spring-boot:run
 ```
 samples/
 ├── sql-injection/
-│   └── payloads.txt           // 공격 페이로드 목록 — 복사해서 취약 폼에 붙여넣기
+│   └── payloads.txt           // 공격 페이로드 목록, 복사해서 취약 폼에 붙여넣기
 ├── xss/
 │   ├── payloads.txt           // 공격 페이로드 목록
-│   └── xss.svg                // SVG XSS 파일 — 취약 파일 업로드 폼에 올려서 확인
+│   └── xss.svg                // SVG XSS 파일, 취약 파일 업로드 폼에 올려서 확인
 ├── file-upload/
 │   ├── webshell.jsp           // [1단계] 취약 업로드 폼에 올린 뒤 웹쉘 실행 섹션에서 명령어 입력
 │   ├── evil-traversal.zip     // [2단계] 취약 ZIP 해제 폼에 올려서 ZIP Slip 경로 탈출 확인
 │   ├── safe-normal.zip        // 안전 ZIP 해제와 비교용 정상 파일
 │   ├── malware.exe            // 안전 업로드 폼에 올리면 .exe 확장자로 차단됨
 │   ├── double-ext/            // .jsp.jpg 등 이중 확장자 우회 시도 샘플
-│   └── zip-bomb/              // ZIP 폭탄 — 압축 해제 시 용량 폭발 개념 확인용
+│   └── zip-bomb/              // ZIP 폭탄, 압축 해제 시 용량 폭발 개념 확인용
 └── path-traversal/
-    └── payloads.txt           // 공격 경로 목록 — 복사해서 취약 폼에 붙여넣기
+    └── payloads.txt           // 공격 경로 목록, 복사해서 취약 폼에 붙여넣기
 ```
 
 #### 업로드 저장 위치
@@ -82,10 +84,10 @@ samples/
 ```
 uploads/
 ├── 999/          // 취약 업로드로 저장된 파일 (webshell.jsp 가 여기에 저장됨)
-├── zip-vuln/     // 취약 ZIP 해제 결과 — ../가 포함된 경로로 탈출한 파일 확인 가능
-└── zip-secure/   // 안전 ZIP 해제 결과 — 경로 탈출 시도가 차단된 결과만 저장됨
+├── zip-vuln/     // 취약 ZIP 해제 결과, ../가 포함된 경로로 탈출한 파일 확인 가능
+└── zip-secure/   // 안전 ZIP 해제 결과, 경로 탈출 시도가 차단된 결과만 저장됨
 
-safe-files/       // 경로 순회 데모의 기준 디렉토리 — 이 폴더 밖으로 나가는 요청은 차단됨
+safe-files/       // 경로 순회 데모의 기준 디렉토리, 이 폴더 밖으로 나가는 요청은 차단됨
 ```
 
 ---
@@ -104,9 +106,11 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리 — 이 폴더 
 
 #### 공격 예시
 
-- 로그인 우회: ID = `admin' --` / PW = 아무거나
-- 전체 행 조회: `%' OR '1'='1`
-- 계정 전체 탈취: `%' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --`
+| 유형 | 입력값 |
+|------|--------|
+| 로그인 우회 | ID = `admin' --` / PW = 아무거나 |
+| 전체 행 조회 | `%' OR '1'='1` |
+| 계정 전체 탈취 | `%' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --` |
 
 ---
 
@@ -116,15 +120,17 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리 — 이 폴더 
 
 | 구분 | 내용 |
 |------|------|
-| 취약 코드 | `th:utext` — HTML 태그를 그대로 렌더링 |
-| 안전 코드 | `th:text` — `<`, `>` 등을 HTML 엔티티로 자동 인코딩 |
+| 취약 코드 | `th:utext` (HTML 태그 그대로 렌더링) |
+| 안전 코드 | `th:text` (`<`, `>` 등을 HTML 엔티티로 자동 인코딩) |
 | OWASP | A03:2021 Injection · CVE-2019-11358 |
 
 #### 공격 예시
 
-- Stored XSS: `<script>alert('XSS!')</script>`
-- 쿠키 탈취: `<script>fetch('/demo/steal?c='+document.cookie)</script>`
-- 탈취된 쿠키 확인: `/demo/steal`
+| 유형 | 입력값 |
+|------|--------|
+| Stored XSS | `<script>alert('XSS!')</script>` |
+| 쿠키 탈취 | `<script>fetch('/demo/steal?c='+document.cookie)</script>` |
+| 탈취 결과 확인 | `/demo/steal` 접속 |
 
 ---
 
@@ -154,15 +160,17 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리 — 이 폴더 
 | 구분 | 내용 |
 |------|------|
 | 기준 경로 | `./safe-files/` |
-| 취약 코드 | `safeFilesDir + "/" + filename` — 경로 검증 없음 |
-| 안전 코드 | `normalize()` + `startsWith(basePath)` — 기준 경로 밖이면 차단 |
+| 취약 코드 | `safeFilesDir + "/" + filename` (경로 검증 없음) |
+| 안전 코드 | `normalize()` + `startsWith(basePath)` (기준 경로 밖이면 차단) |
 | OWASP | A01:2021 Broken Access Control · CVE-2021-41773 |
 
 #### 공격 예시
 
-- `../src/main/resources/application.properties` — DB 비밀번호 등 설정 파일 노출
-- `../../pom.xml` — 프로젝트 의존성 구조 노출
-- `../../../Windows/win.ini` — Windows 시스템 파일 접근
+| 입력값 | 노출 내용 |
+|--------|-----------|
+| `../src/main/resources/application.properties` | DB 비밀번호 등 설정 파일 |
+| `../../pom.xml` | 프로젝트 의존성 구조 |
+| `../../../Windows/win.ini` | Windows 시스템 파일 |
 
 ---
 
@@ -173,7 +181,7 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리 — 이 폴더 
 | Java | 17+ |
 | Spring Boot | 3.2.3 |
 | Thymeleaf | 3.x |
-| Spring Security | 6.x (전체 비활성화 — 데모 목적) |
+| Spring Security | 6.x (전체 비활성화, 데모 목적) |
 | MySQL | 8.0+ |
 
 ---

