@@ -2,6 +2,8 @@
 
 SQL Injection, XSS, 파일 업로드 취약점, 경로 순회 등 대표적인 웹 취약점을 취약한 코드와 안전한 코드로 직접 비교하며 실습할 수 있는 Spring Boot 기반 프로젝트입니다.
 
+[시연 순서](explain.md) | [발표자료](docs/시큐어코딩%20발표자료.pdf)
+
 ---
 
 ## 실행 방법
@@ -23,7 +25,7 @@ mysql -u root -p
 CREATE DATABASE techseminar CHARACTER SET utf8mb4;
 ```
 
-`schema.sql` / `data.sql` 은 앱 시작 시 자동으로 실행됩니다.
+`schema.sql`, `data.sql` 은 앱 시작 시 자동으로 실행됩니다.
 
 #### DB 연결 설정
 
@@ -62,19 +64,19 @@ mvn spring-boot:run
 ```
 samples/
 ├── sql-injection/
-│   └── payloads.txt           // 공격 페이로드 목록, 복사해서 취약 폼에 붙여넣기
+│   └── payloads.txt           // 공격 페이로드 목록, 취약 폼에 붙여넣기
 ├── xss/
 │   ├── payloads.txt           // 공격 페이로드 목록
-│   └── xss.svg                // SVG XSS 파일, 취약 파일 업로드 폼에 올려서 확인
+│   └── xss.svg                // SVG XSS 파일, 취약 파일 업로드 폼에서 확인
 ├── file-upload/
-│   ├── webshell.jsp           // [1단계] 취약 업로드 폼에 올린 뒤 웹쉘 실행 섹션에서 명령어 입력
-│   ├── evil-traversal.zip     // [2단계] 취약 ZIP 해제 폼에 올려서 ZIP Slip 경로 탈출 확인
+│   ├── webshell.jsp           // 취약 업로드 폼, 웹쉘 실행 섹션에서 명령어 입력
+│   ├── evil-traversal.zip     // 취약 ZIP 해제 폼, ZIP Slip 경로 탈출 확인
 │   ├── safe-normal.zip        // 안전 ZIP 해제와 비교용 정상 파일
-│   ├── malware.exe            // 안전 업로드 폼에 올리면 .exe 확장자로 차단됨
+│   ├── malware.exe            // 안전 업로드 폼, .exe 확장자 차단 확인
 │   ├── double-ext/            // .jsp.jpg 등 이중 확장자 우회 시도 샘플
 │   └── zip-bomb/              // ZIP 폭탄, 압축 해제 시 용량 폭발 개념 확인용
 └── path-traversal/
-    └── payloads.txt           // 공격 경로 목록, 복사해서 취약 폼에 붙여넣기
+    └── payloads.txt           // 공격 경로 목록, 취약 폼에 붙여넣기
 ```
 
 #### 업로드 저장 위치
@@ -83,11 +85,11 @@ samples/
 
 ```
 uploads/
-├── 999/          // 취약 업로드로 저장된 파일 (webshell.jsp 가 여기에 저장됨)
-├── zip-vuln/     // 취약 ZIP 해제 결과, ../가 포함된 경로로 탈출한 파일 확인 가능
-└── zip-secure/   // 안전 ZIP 해제 결과, 경로 탈출 시도가 차단된 결과만 저장됨
+├── 999/          // 취약 업로드 저장 경로 (webshell.jsp)
+├── zip-vuln/     // 취약 ZIP 해제 결과, 경로 탈출 파일 포함
+└── zip-secure/   // 안전 ZIP 해제 결과, 탈출 시도 차단
 
-safe-files/       // 경로 순회 데모의 기준 디렉토리, 이 폴더 밖으로 나가는 요청은 차단됨
+safe-files/       // 경로 순회 데모 기준 디렉토리, 범위 밖 요청 차단
 ```
 
 ---
@@ -102,7 +104,7 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리, 이 폴더 밖
 |------|------|
 | 취약 코드 | 문자열 연결: `"... WHERE user_id = '" + userId + "'"` |
 | 안전 코드 | `"... WHERE user_id = ?"` + 파라미터 바인딩 |
-| OWASP | A03:2021 Injection · CVE-2017-5638 |
+| OWASP | A03:2021 Injection, CVE-2017-5638 |
 
 #### 공격 예시
 
@@ -122,7 +124,7 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리, 이 폴더 밖
 |------|------|
 | 취약 코드 | `th:utext` (HTML 태그 그대로 렌더링) |
 | 안전 코드 | `th:text` (`<`, `>` 등을 HTML 엔티티로 자동 인코딩) |
-| OWASP | A03:2021 Injection · CVE-2019-11358 |
+| OWASP | A03:2021 Injection, CVE-2019-11358 |
 
 #### 공격 예시
 
@@ -142,7 +144,7 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리, 이 폴더 밖
 |------|------|
 | 취약 코드 | 확장자 검사 없음, 원본 파일명 그대로 저장 |
 | 안전 코드 | 화이트리스트 확장자 검사 + UUID 파일명으로 저장 |
-| OWASP | A04:2021 Insecure Design · CVE-2021-22005 |
+| OWASP | A04:2021 Insecure Design, CVE-2021-22005 |
 
 #### 공격 파일 (`samples/file-upload/` 폴더)
 
@@ -162,7 +164,7 @@ safe-files/       // 경로 순회 데모의 기준 디렉토리, 이 폴더 밖
 | 기준 경로 | `./safe-files/` |
 | 취약 코드 | `safeFilesDir + "/" + filename` (경로 검증 없음) |
 | 안전 코드 | `normalize()` + `startsWith(basePath)` (기준 경로 밖이면 차단) |
-| OWASP | A01:2021 Broken Access Control · CVE-2021-41773 |
+| OWASP | A01:2021 Broken Access Control, CVE-2021-41773 |
 
 #### 공격 예시
 

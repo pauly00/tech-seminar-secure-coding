@@ -1,8 +1,6 @@
 package com.techseminar.service;
 
-import com.techseminar.model.User;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -67,40 +65,6 @@ public class UserService {
             result.setMessage("DB 오류: " + e.getMessage());
         }
         return result;
-    }
-
-    public boolean register(User user) {
-        String sql = "INSERT INTO user_tb(user_id, user_password, user_name, user_gender, user_email) VALUES (?,?,?,?,?)";
-        try {
-            return jdbcTemplate.update(sql,
-                user.getUserId(), user.getUserPassword(),
-                user.getUserName(), user.getUserGender(), user.getUserEmail()) > 0;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public List<User> getList() {
-        return jdbcTemplate.query("SELECT * FROM user_tb ORDER BY id DESC", userRowMapper());
-    }
-
-    public User findById(String userId) {
-        List<User> users = jdbcTemplate.query(
-            "SELECT * FROM user_tb WHERE user_id = ?", userRowMapper(), userId);
-        return users.isEmpty() ? null : users.get(0);
-    }
-
-    private RowMapper<User> userRowMapper() {
-        return (rs, rowNum) -> {
-            User u = new User();
-            u.setId(rs.getInt("id"));
-            u.setUserId(rs.getString("user_id"));
-            u.setUserPassword(rs.getString("user_password"));
-            u.setUserName(rs.getString("user_name"));
-            u.setUserGender(rs.getString("user_gender"));
-            u.setUserEmail(rs.getString("user_email"));
-            return u;
-        };
     }
 
     public static class LoginResult {

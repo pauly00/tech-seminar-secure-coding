@@ -164,6 +164,24 @@ input[type=text].mono { font-family: 'Consolas', 'D2Coding', monospace; }
     font-family: 'Consolas', 'D2Coding', monospace;
 }
 
+/* 복사 버튼 */
+.copy-btn {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: .72rem;
+    border-radius: 3px;
+    cursor: pointer;
+    background: #fff;
+    color: var(--black);
+    border: 1px solid var(--light);
+    margin-left: 5px;
+    vertical-align: middle;
+    font-family: inherit;
+    line-height: 1.4;
+}
+.copy-btn:hover { background: var(--subtle); }
+.copy-btn.copied { color: var(--gray); border-color: var(--gray); }
+
 /* 공격 힌트 박스 */
 .attack-hint {
     background: var(--subtle);

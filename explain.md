@@ -1,20 +1,22 @@
 # 시연 순서 가이드
 
-## 1. 발표 배경 (2분) · 슬라이드만
+이 문서는 시큐어 코딩 기술세미나 발표에서 시연한 각 취약점의 설명과 실습 순서를 정리한 기능 설명용 문서입니다.
 
-청중이 "이게 왜 중요한가"를 느끼게 만드는 구간
+## 1. 발표 배경 (2분), 슬라이드만
+
+청중이 "이게 왜 중요한가"를 느끼게 만드는 구간입니다.
 
 | 연도 | 사고 | 원인 | 피해 |
 |------|------|------|------|
 | 2017 | 에퀴팩스 해킹 | 입력값 검증 미흡 (CVE-2017-5638) | 1억 4,700만 명 개인정보 유출 |
 | 2021 | Log4Shell | 입력값 검증 미흡, JNDI Injection (CVE-2021-44228) | 전 세계 수억 대 서버 동시 마비 |
-| 2025 | 국내 통신사 대규모 해킹 | 통신 인프라 침투 | 대규모 개인정보 유출 · 통신 인프라 위협 |
+| 2025 | 국내 통신사 대규모 해킹 | 통신 인프라 침투 | 대규모 개인정보 유출, 통신 인프라 위협 |
 | 2025 | 롯데카드 개인정보 유출 | 웹쉘 업로드를 통한 서버 침투 | 국내 카드사 대량 개인정보 유출 |
 
 > "에퀴팩스 해킹은 패치가 없어서 당한 게 아닙니다.
 > 개발자가 입력값을 검증하지 않은 코드 한 줄이 시작이었습니다."
 
-## 2. 시큐어코딩이란 (2분) · 슬라이드만
+## 2. 시큐어코딩이란 (2분), 슬라이드만
 
 버그 vs 취약점 구분:
 
@@ -34,17 +36,13 @@
 운영 이후  : 1,000 ~ 10,000
 ```
 
-## 3. 주요 취약점 (8분) · 핵심 시연 구간
-
-> 브라우저에서 `http://localhost:8080` 열어둔 상태에서 시작
-
----
+## 3. 주요 취약점 (8분), 핵심 시연 구간
 
 ### 3-1. SQL Injection (3분)
 
-**분류**: OWASP A03:2021 Injection · CVE-2017-5638 (Equifax 해킹)
+**분류**: OWASP A03:2021 Injection, CVE-2017-5638 (Equifax 해킹)
 
-**취약점**: 사용자 입력을 SQL 문자열에 직접 이어붙여 쿼리 구조 자체를 변조 가능
+**취약점**: 사용자 입력을 SQL 문자열에 직접 이어붙여 쿼리 구조 자체를 변조할 수 있습니다.
 
 ```java
 // 취약 코드 (UserService.java)
@@ -61,24 +59,22 @@ jdbcTemplate.queryForList(sql, userId, password);
 // 입력값은 항상 데이터로만 처리되어 쿼리 구조 변조 불가
 ```
 
-**수정 포인트**: `?` 자리표시자 + `jdbcTemplate.queryForList(sql, userId, password)` · 파라미터 바인딩
+**수정 포인트**: `?` 자리표시자 + `jdbcTemplate.queryForList(sql, userId, password)`, 파라미터 바인딩
 
 **시연 순서**
 
 1. `/demo/sql-injection` 이동
-2. 취약 검색창에 `%' OR '1'='1` 입력 → 전체 행 노출 확인
-3. `%' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --` 입력 → DB 계정 전체 탈취 확인
-4. 취약 로그인에 ID = `admin' --`, PW = 아무거나 → 로그인 우회 확인
-5. 안전 검색창에 동일한 문자열 입력 → 0개 행 반환 확인
+2. 취약 검색창에 `%' OR '1'='1` 입력, 전체 행 노출 확인
+3. `%' UNION SELECT 1,user_id,user_password,user_name,user_email,user_gender,0 FROM user_tb --` 입력, DB 계정 전체 탈취 확인
+4. 취약 로그인에 ID = `admin' --`, PW = 아무거나, 로그인 우회 확인
+5. 안전 검색창에 동일한 문자열 입력, 0개 행 반환 확인
 6. "JdbcTemplate 파라미터 바인딩 한 줄로 막힙니다"
-
----
 
 ### 3-2. XSS (2분 30초)
 
-**분류**: OWASP A03:2021 Injection · CVE-2019-11358 (jQuery XSS, 수천 개 사이트 영향)
+**분류**: OWASP A03:2021 Injection, CVE-2019-11358 (jQuery XSS, 수천 개 사이트 영향)
 
-**취약점**: 사용자 입력을 HTML 이스케이프 없이 그대로 출력 → 악성 스크립트가 다른 사용자 브라우저에서 실행
+**취약점**: 사용자 입력을 HTML 이스케이프 없이 그대로 출력하면 악성 스크립트가 다른 사용자 브라우저에서 실행됩니다.
 
 ```java
 // 취약 코드 (XssController.java)
@@ -103,22 +99,20 @@ secureComments.add(comment);  // 동일하게 저장하지만
 
 **시연 순서**
 
-1. `/login` 에서 `admin / 1234` 로그인 → 세션 쿠키 발급 확인
+1. `/login` 에서 `admin / 1234` 로그인, 세션 쿠키 발급 확인
 2. `/demo/xss` 이동
-3. 취약 댓글창에 `<script>alert('XSS!')</script>` 입력 → 팝업 확인
-4. `<script>fetch('/demo/steal?c='+document.cookie)</script>` 입력 → `/demo/steal`에서 탈취된 쿠키 확인
-5. 취약 반사형 폼에 `<script>alert(1)</script>` 입력 → alert 실행 확인
-6. 안전 댓글창에 동일한 스크립트 입력 → 텍스트로 그대로 출력됨 확인
-7. "`th:text` 하나로 막힙니다" · 코드 비교 가리키기
+3. 취약 댓글창에 `<script>alert('XSS!')</script>` 입력, 팝업 확인
+4. `<script>fetch('/demo/steal?c='+document.cookie)</script>` 입력, `/demo/steal`에서 탈취된 쿠키 확인
+5. 취약 반사형 폼에 `<script>alert(1)</script>` 입력, alert 실행 확인
+6. 안전 댓글창에 동일한 스크립트 입력, 텍스트로 그대로 출력됨 확인
+7. "`th:text` 하나로 막힙니다", 코드 비교 가리키기
 8. 댓글 초기화 버튼 클릭
-
----
 
 ### 3-3. 파일 업로드 취약점 (2분 30초)
 
-**분류**: OWASP A04:2021 Insecure Design · CVE-2021-22005 (VMware vCenter 웹쉘 업로드 → RCE)
+**분류**: OWASP A04:2021 Insecure Design, CVE-2021-22005 (VMware vCenter 웹쉘 업로드 → RCE)
 
-**취약점**: 확장자 검사 없이 파일 저장 → `.jsp` 같은 실행 파일 업로드 후 서버에서 직접 실행 가능 (RCE)
+**취약점**: 확장자 검사 없이 파일을 저장하면 `.jsp` 같은 실행 파일을 업로드해 서버에서 직접 명령어를 실행할 수 있습니다 (RCE).
 
 ```java
 // 취약 코드 (FileService.java)
@@ -138,21 +132,19 @@ Files.copy(file.getInputStream(), dir.resolve(savedName), StandardCopyOption.REP
 **시연 순서**
 
 1. `/demo/file-upload` 이동
-2. 취약 업로드에 `samples/file-upload/webshell.jsp` 선택 → 업로드
+2. 취약 업로드에 `samples/file-upload/webshell.jsp` 선택, 업로드
 3. 저장 경로 확인 (`uploads/999/webshell.jsp`)
-4. 웹쉘 실행 섹션에서 `whoami`, `dir` 입력 → 서버 명령 실행 확인
-5. 취약 ZIP 해제에 `samples/file-upload/evil-traversal.zip` 업로드 → 해제 경로가 `uploads/` 밖으로 탈출하는 것 확인
-6. 안전 ZIP 해제에 동일한 파일 → BLOCKED 확인
-7. 안전 업로드에 `samples/file-upload/webshell.jsp` → 차단 확인
+4. 웹쉘 실행 섹션에서 `whoami`, `dir` 입력, 서버 명령 실행 확인
+5. 취약 ZIP 해제에 `samples/file-upload/evil-traversal.zip` 업로드, 해제 경로가 `uploads/` 밖으로 탈출하는 것 확인
+6. 안전 ZIP 해제에 동일한 파일, BLOCKED 확인
+7. 안전 업로드에 `samples/file-upload/webshell.jsp`, 차단 확인
 8. "확장자 화이트리스트 한 줄로 막힙니다"
-
----
 
 ### 3-4. 경로 순회 (1분)
 
-**분류**: OWASP A01:2021 Broken Access Control · CVE-2021-41773 (Apache HTTP Server 경로 순회 → RCE)
+**분류**: OWASP A01:2021 Broken Access Control, CVE-2021-41773 (Apache HTTP Server 경로 순회 → RCE)
 
-**취약점**: 파일 경로를 정규화하지 않으면 `../` 를 이용해 기준 디렉토리 밖의 파일 접근 가능
+**취약점**: 파일 경로를 정규화하지 않으면 `../` 를 이용해 기준 디렉토리 밖의 파일에 접근할 수 있습니다.
 
 ```java
 // 취약 코드 (PathTraversalController.java)
@@ -173,14 +165,12 @@ Files.readString(requestedPath);
 **시연 순서**
 
 1. `/demo/path-traversal` 이동
-2. 취약 폼에 `../src/main/resources/application.properties` 입력 → DB 비밀번호 포함 설정 파일 노출 확인
-3. `../../pom.xml` 입력 → 프로젝트 구조 노출 확인
-4. 안전 폼에 동일한 경로 입력 → "경로 순회 감지" 차단 확인
+2. 취약 폼에 `../src/main/resources/application.properties` 입력, DB 비밀번호 포함 설정 파일 노출 확인
+3. `../../pom.xml` 입력, 프로젝트 구조 노출 확인
+4. 안전 폼에 동일한 경로 입력, "경로 순회 감지" 차단 확인
 5. "`normalize() + startsWith()` 두 줄로 막힙니다"
 
----
-
-## 4. 방어 도구 (2분) · 슬라이드만
+## 4. 방어 도구 (2분), 슬라이드만
 
 SAST vs DAST 비교:
 
@@ -202,7 +192,7 @@ DAST (동적 분석)
 > jdbcTemplate 파라미터 바인딩을 쓸지, th:text를 쓸지는
 > 결국 개발자의 습관과 코드 리뷰에서 결정됩니다."
 
-## 5. 마무리 (1분) · 슬라이드만
+## 5. 마무리 (1분), 슬라이드만
 
 | 취약점 | OWASP Top 10 (2021) | 대표 CVE | Java 수정 포인트 |
 |--------|---------------------|----------|-----------------|
@@ -211,14 +201,6 @@ DAST (동적 분석)
 | 파일 업로드 | A04 Insecure Design | CVE-2021-22005 | `ALLOWED_EXTENSIONS.contains(ext)` |
 | 경로 순회 | A01 Broken Access Control | CVE-2021-41773 | `requestedPath.startsWith(basePath)` |
 
-> "OWASP Top 10은 매년 업데이트됩니다.
-> 오늘 본 취약점들은 2003년부터 목록에 있었고, 아직도 목록에 있습니다."
-
-## 시연 전 체크리스트
-
-- `http://localhost:8080` 정상 접속 확인
-- MySQL 서버 실행 중 확인
-- `samples/file-upload/webshell.jsp` 존재 확인
-- `samples/file-upload/evil-traversal.zip` 존재 확인
-- 브라우저 확대 비율 125~150% (청중 가시성)
-- 댓글 초기화 버튼으로 XSS 데모 초기 상태 복원
+> 제로 트러스트, 외부에서 들어오는 모든 입력은 일단 유죄로 추정합니다.
+> 보안을 직접 구현하기보다 검증된 표준 기능을 사용하는 습관이 필요합니다.
+> 시큐어 코딩은 특별한 보안 기술이 아니라, 백엔드 개발자가 갖춰야 할 가장 기본적인 설계 습관이자 원칙입니다.
